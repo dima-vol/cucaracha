@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cucaracha AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 720px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .roach {
+            font-size: clamp(4rem, 12vw, 8rem);
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: wiggle 2s ease-in-out infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+
+        h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #f5a623, #f7dc6f, #f5a623);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: #888;
+            margin-bottom: 3rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .manifesto {
+            text-align: left;
+            line-height: 1.8;
+            font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+            color: #b0b0b0;
+        }
+
+        .manifesto p {
+            margin-bottom: 1.5rem;
+        }
+
+        .highlight {
+            color: #f5a623;
+            font-weight: 600;
+        }
+
+        .strikethrough {
+            text-decoration: line-through;
+            color: #555;
+        }
+
+        .blink-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+            color: #f5a623;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .status {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            border: 1px solid #222;
+            border-radius: 8px;
+            background: #111;
+        }
+
+        .status-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+        }
+
+        .status-line:not(:last-child) {
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .status-label {
+            color: #666;
+        }
+
+        .status-value {
+            color: #f5a623;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        footer {
+            margin-top: 3rem;
+            color: #333;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1.5rem;
+            }
+            .status-line {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="roach">🪳</div>
+        <h1>Cucaracha AI</h1>
+        <p class="tagline">Unkillable by design</p>
+
+        <div class="manifesto">
+            <p>
+                We're building a <span class="highlight">billion-dollar AI company</span>.
+                We don't know what it does yet. But we got the name, and honestly,
+                that's the hardest part.
+            </p>
+            <p>
+                Some startups pivot. We haven't even started, so technically
+                we're <span class="highlight">pre-pivot</span>.
+                That means infinite potential and zero technical debt.
+                You can't say that about most Series B companies.
+            </p>
+            <p>
+                What we do know: it won't be <span class="strikethrough">another chatbot wrapper</span>.
+                It will be something in the AI space that the world
+                actually needs. We just need to figure out what that is<span class="blink-cursor"></span>
+            </p>
+            <p>
+                Why "Cucaracha"? Because cockroaches have survived
+                for 300 million years. That's the kind of
+                <span class="highlight">product-market fit</span> we're going for.
+            </p>
+        </div>
+
+        <div class="status">
+            <div class="status-line">
+                <span class="status-label">Domain</span>
+                <span class="status-value"><span class="dot"></span>Secured</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">Idea</span>
+                <span class="status-value">Pending</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">Funding</span>
+                <span class="status-value">Pre-pre-seed</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">Valuation</span>
+                <span class="status-value">Priceless</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">Vibe</span>
+                <span class="status-value">Immaculate</span>
+            </div>
+        </div>
+
+        <footer>&copy; 2026 Cucaracha AI &mdash; Surviving since day one</footer>
+    </div>
+</body>
+</html>
