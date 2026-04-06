@@ -263,6 +263,7 @@
         let best = parseInt(localStorage.getItem('cucaracha_best2') || '0');
         let frameCount = 0;
         let shieldTimer = 0;
+        let chipsCollected = 0;
         let slippers = [];
         let chips = [];
         let particles = [];
@@ -537,6 +538,7 @@
             score = 0;
             frameCount = 0;
             shieldTimer = 0;
+            chipsCollected = 0;
             gameOver = false;
             scoreEl.textContent = '0';
         }
@@ -585,6 +587,7 @@
                 if (circleCollide(roach.x, roach.y, 16, c.x, c.y, 12)) {
                     shieldTimer = 180; // 3 seconds at 60fps
                     score += 50;
+                    chipsCollected++;
                     scoreEl.textContent = score;
                     spawnParticles(c.x, c.y, '#4caf50', 10);
                     chips.splice(i, 1);
@@ -633,20 +636,55 @@
             }
         }
 
+        function getShareText() {
+            const secs = (frameCount / 60).toFixed(1);
+            const chipStr = chipsCollected > 0 ? ' | \uD83E\uDDE0\u00D7' + chipsCollected : '';
+            return '\uD83E\uDEB3 Cucaracha AI \u2014 ' + secs + 's survived!\nScore: ' + score + chipStr + '\nCan you beat me? cucaracha.ai';
+        }
+
+        function shareResult() {
+            const text = getShareText();
+            if (navigator.share) {
+                navigator.share({ text }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    shareBtn.textContent = 'Copied!';
+                    setTimeout(() => { shareBtn.textContent = '\uD83D\uDCE4 Share result'; }, 1500);
+                });
+            }
+        }
+
+        // Share button (DOM overlay)
+        const shareBtn = document.createElement('button');
+        shareBtn.textContent = '\uD83D\uDCE4 Share result';
+        shareBtn.style.cssText = 'position:absolute;left:50%;bottom:60px;transform:translateX(-50%);padding:10px 24px;font:bold 14px monospace;background:#333;color:#fff;border:none;border-radius:8px;cursor:pointer;display:none;z-index:10;transition:background 0.2s';
+        shareBtn.addEventListener('mouseenter', () => { shareBtn.style.background = '#555'; });
+        shareBtn.addEventListener('mouseleave', () => { shareBtn.style.background = '#333'; });
+        shareBtn.addEventListener('click', e => { e.stopPropagation(); shareResult(); });
+        wrapper.appendChild(shareBtn);
+
         function drawGameOver() {
             draw();
             ctx.fillStyle = 'rgba(255,255,255,0.88)';
             ctx.fillRect(0, 0, W, H);
 
+            const secs = (frameCount / 60).toFixed(1);
+
             ctx.fillStyle = '#333';
             ctx.font = 'bold 20px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('300 million years of evolution', W / 2, H / 2 - 24);
-            ctx.fillText('ended here.', W / 2, H / 2 + 2);
+            ctx.fillText('300 million years of evolution', W / 2, H / 2 - 40);
+            ctx.fillText('ended here.', W / 2, H / 2 - 14);
 
-            ctx.font = '13px monospace';
-            ctx.fillStyle = '#aaa';
-            ctx.fillText('Click or tap to try again', W / 2, H / 2 + 36);
+            ctx.font = '15px monospace';
+            ctx.fillStyle = '#e8930a';
+            ctx.fillText(secs + 's  |  Score: ' + score + (chipsCollected > 0 ? '  |  \uD83E\uDDE0\u00D7' + chipsCollected : ''), W / 2, H / 2 + 16);
+
+            ctx.font = '12px monospace';
+            ctx.fillStyle = '#bbb';
+            ctx.fillText('Click or tap to try again', W / 2, H / 2 + 80);
+
+            shareBtn.style.display = 'block';
         }
 
         // ---- Loop ----
@@ -661,6 +699,8 @@
         }
 
         function start() {
+            shareBtn.style.display = 'none';
+            shareBtn.textContent = '\uD83D\uDCE4 Share result';
             if (gameOver) {
                 reset();
                 running = true;
