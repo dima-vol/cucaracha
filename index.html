@@ -5,21 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cucaracha AI</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: #0a0a0a;
-            color: #e0e0e0;
+            background: #fafafa;
+            color: #333;
             font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 2rem;
             overflow-x: hidden;
         }
@@ -30,62 +25,98 @@
             text-align: center;
         }
 
-        .roach {
-            font-size: clamp(4rem, 12vw, 8rem);
-            margin-bottom: 1rem;
-            display: inline-block;
-            animation: wiggle 2s ease-in-out infinite;
-        }
-
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(-3deg); }
-            50% { transform: rotate(3deg); }
-        }
-
         h1 {
             font-size: clamp(2rem, 6vw, 3.5rem);
             font-weight: 800;
             letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #f5a623, #f7dc6f, #f5a623);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 0.3rem;
+            color: #222;
         }
 
         .tagline {
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-            color: #888;
-            margin-bottom: 3rem;
+            font-size: clamp(0.85rem, 2.2vw, 1rem);
+            color: #999;
+            margin-bottom: 1.5rem;
             letter-spacing: 0.15em;
             text-transform: uppercase;
         }
 
+        /* ---- GAME ---- */
+        .game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto 2.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            cursor: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .game-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .game-overlay.clickable { pointer-events: auto; cursor: pointer; }
+
+        .overlay-icon { font-size: 3rem; margin-bottom: 0.5rem; }
+
+        .overlay-title {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .overlay-sub {
+            font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+            color: #aaa;
+        }
+
+        .score-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+            color: #999;
+            border-top: 1px solid #f0f0f0;
+            background: #fcfcfc;
+        }
+
+        .score-bar strong { color: #333; }
+
+        /* ---- MANIFESTO ---- */
         .manifesto {
             text-align: left;
             line-height: 1.8;
             font-size: clamp(0.95rem, 2.2vw, 1.15rem);
-            color: #b0b0b0;
+            color: #666;
         }
 
-        .manifesto p {
-            margin-bottom: 1.5rem;
-        }
-
-        .highlight {
-            color: #f5a623;
-            font-weight: 600;
-        }
-
-        .strikethrough {
-            text-decoration: line-through;
-            color: #555;
-        }
+        .manifesto p { margin-bottom: 1.5rem; }
+        .highlight { color: #e8930a; font-weight: 600; }
+        .strikethrough { text-decoration: line-through; color: #ccc; }
 
         .blink-cursor::after {
             content: '|';
             animation: blink 1s step-end infinite;
-            color: #f5a623;
+            color: #e8930a;
         }
 
         @keyframes blink {
@@ -93,12 +124,13 @@
             50% { opacity: 0; }
         }
 
+        /* ---- STATUS ---- */
         .status {
-            margin-top: 3rem;
+            margin-top: 2.5rem;
             padding: 1.5rem;
-            border: 1px solid #222;
+            border: 1px solid #e8e8e8;
             border-radius: 8px;
-            background: #111;
+            background: #fff;
         }
 
         .status-line {
@@ -109,22 +141,13 @@
             font-size: clamp(0.8rem, 1.8vw, 0.95rem);
         }
 
-        .status-line:not(:last-child) {
-            border-bottom: 1px solid #1a1a1a;
-        }
-
-        .status-label {
-            color: #666;
-        }
-
-        .status-value {
-            color: #f5a623;
-        }
+        .status-line:not(:last-child) { border-bottom: 1px solid #f3f3f3; }
+        .status-label { color: #aaa; }
+        .status-value { color: #e8930a; }
 
         .dot {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: #4caf50;
             border-radius: 50%;
             margin-right: 0.5rem;
@@ -138,14 +161,13 @@
 
         footer {
             margin-top: 3rem;
-            color: #333;
+            color: #ccc;
             font-size: 0.8rem;
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 1.5rem;
-            }
+            body { padding: 1rem; }
+            .game-wrapper { cursor: default; }
             .status-line {
                 flex-direction: column;
                 align-items: flex-start;
@@ -156,10 +178,24 @@
 </head>
 <body>
     <div class="container">
-        <div class="roach">🪳</div>
         <h1>Cucaracha AI</h1>
         <p class="tagline">Unkillable by design</p>
 
+        <!-- GAME -->
+        <div class="game-wrapper" id="gameWrapper">
+            <canvas id="game" width="720" height="400"></canvas>
+            <div class="game-overlay clickable" id="overlay">
+                <div class="overlay-icon">🪳</div>
+                <div class="overlay-title">Survive the slippers</div>
+                <div class="overlay-sub">Move mouse or drag to dodge. Click to start.</div>
+            </div>
+            <div class="score-bar">
+                <div>Score: <strong id="scoreDisplay">0</strong></div>
+                <div>Best: <strong id="bestDisplay">0</strong></div>
+            </div>
+        </div>
+
+        <!-- MANIFESTO -->
         <div class="manifesto">
             <p>
                 We're building a <span class="highlight">billion-dollar AI company</span>.
@@ -209,5 +245,470 @@
 
         <footer>&copy; 2026 Cucaracha AI &mdash; Surviving since day one</footer>
     </div>
+
+    <script>
+    (() => {
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('overlay');
+        const scoreEl = document.getElementById('scoreDisplay');
+        const bestEl = document.getElementById('bestDisplay');
+        const wrapper = document.getElementById('gameWrapper');
+
+        const W = 720, H = 400;
+        let dpr = 1;
+        let running = false;
+        let gameOver = false;
+        let score = 0;
+        let best = parseInt(localStorage.getItem('cucaracha_best2') || '0');
+        let frameCount = 0;
+        let shieldTimer = 0;
+        let slippers = [];
+        let chips = [];
+        let particles = [];
+
+        bestEl.textContent = best;
+
+        // ---- SVG images ----
+        const slipperSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96" width="64" height="96">
+            <ellipse cx="32" cy="52" rx="26" ry="40" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+            <ellipse cx="32" cy="52" rx="22" ry="36" fill="none" stroke="#c0392b" stroke-width="1" opacity="0.4"/>
+            <path d="M18 38 Q24 20 32 28" stroke="#2c3e50" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path d="M46 38 Q40 20 32 28" stroke="#2c3e50" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <circle cx="32" cy="28" r="3" fill="#2c3e50"/>
+            <line x1="20" y1="50" x2="44" y2="50" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="18" y1="58" x2="46" y2="58" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="18" y1="66" x2="46" y2="66" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="20" y1="74" x2="44" y2="74" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+            <line x1="24" y1="82" x2="40" y2="82" stroke="#c0392b" stroke-width="1.5" opacity="0.5"/>
+        </svg>`;
+
+        const slipperImg = new Image();
+        slipperImg.src = 'data:image/svg+xml;base64,' + btoa(slipperSVG);
+
+        // ---- Roach ----
+        const roach = {
+            x: W / 2, y: H - 50,
+            w: 40, h: 30,
+            targetX: W / 2,
+            draw() {
+                const rx = this.x - this.w / 2;
+                const ry = this.y - this.h / 2;
+                ctx.save();
+
+                // Shield glow
+                if (shieldTimer > 0) {
+                    ctx.shadowColor = '#4caf50';
+                    ctx.shadowBlur = 20;
+                    ctx.fillStyle = 'rgba(76, 175, 80, 0.12)';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 28, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+
+                // Body
+                ctx.fillStyle = '#5a3e28';
+                ctx.beginPath();
+                ctx.ellipse(this.x, this.y, 20, 13, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Head
+                ctx.fillStyle = '#4a3020';
+                ctx.beginPath();
+                ctx.ellipse(this.x, ry - 2, 8, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(this.x - 4, ry - 3, 2.5, 0, Math.PI * 2);
+                ctx.arc(this.x + 4, ry - 3, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#111';
+                ctx.beginPath();
+                ctx.arc(this.x - 3.5, ry - 3, 1.2, 0, Math.PI * 2);
+                ctx.arc(this.x + 4.5, ry - 3, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Antennae
+                ctx.strokeStyle = '#4a3020';
+                ctx.lineWidth = 1.5;
+                const wave = Math.sin(frameCount * 0.1) * 3;
+                ctx.beginPath();
+                ctx.moveTo(this.x - 4, ry - 7);
+                ctx.quadraticCurveTo(this.x - 12, ry - 22 + wave, this.x - 18, ry - 18 + wave);
+                ctx.moveTo(this.x + 4, ry - 7);
+                ctx.quadraticCurveTo(this.x + 12, ry - 22 - wave, this.x + 18, ry - 18 - wave);
+                ctx.stroke();
+
+                // Legs
+                ctx.strokeStyle = '#5a3e28';
+                ctx.lineWidth = 1.8;
+                const legAnim = running ? Math.sin(frameCount * 0.3) * 4 : 0;
+                for (let i = -1; i <= 1; i++) {
+                    const lx = this.x + i * 10;
+                    // Left legs
+                    ctx.beginPath();
+                    ctx.moveTo(lx - 2, this.y);
+                    ctx.lineTo(lx - 14 + (i % 2 === 0 ? legAnim : -legAnim), this.y + 10);
+                    ctx.stroke();
+                    // Right legs
+                    ctx.beginPath();
+                    ctx.moveTo(lx + 2, this.y);
+                    ctx.lineTo(lx + 14 + (i % 2 === 0 ? -legAnim : legAnim), this.y + 10);
+                    ctx.stroke();
+                }
+
+                // Wing line
+                ctx.strokeStyle = '#6b4c34';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y - 10);
+                ctx.lineTo(this.x, this.y + 10);
+                ctx.stroke();
+
+                // Shield ring
+                if (shieldTimer > 0) {
+                    ctx.strokeStyle = shieldTimer < 60 && frameCount % 10 < 5 ? 'transparent' : '#4caf50';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 26, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            },
+            update() {
+                // Smooth follow
+                const dx = this.targetX - this.x;
+                this.x += dx * 0.15;
+                // Clamp
+                this.x = Math.max(25, Math.min(W - 25, this.x));
+            }
+        };
+
+        // ---- Spawning ----
+        function getDifficulty() {
+            const t = frameCount / 60; // seconds
+            return {
+                slipperInterval: Math.max(15, 50 - t * 0.5),
+                slipperSpeed: 2 + t * 0.15,
+                chipInterval: Math.max(120, 300 - t * 2),
+            };
+        }
+
+        function spawnSlipper() {
+            const d = getDifficulty();
+            const size = 40 + Math.random() * 20;
+            slippers.push({
+                x: 30 + Math.random() * (W - 60),
+                y: -size,
+                w: size * 0.67,
+                h: size,
+                speed: d.slipperSpeed + Math.random() * 1.5,
+                rot: (Math.random() - 0.5) * 0.4,
+                rotSpeed: (Math.random() - 0.5) * 0.03,
+            });
+        }
+
+        function spawnChip() {
+            chips.push({
+                x: 30 + Math.random() * (W - 60),
+                y: -20,
+                w: 22, h: 22,
+                speed: 1.5 + Math.random(),
+            });
+        }
+
+        function spawnParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 30 + Math.random() * 20,
+                    maxLife: 50,
+                    size: 2 + Math.random() * 3,
+                    color,
+                });
+            }
+        }
+
+        // ---- Drawing helpers ----
+        function drawChip(c) {
+            const bob = Math.sin(frameCount * 0.08 + c.x) * 3;
+            const cx = c.x, cy = c.y + bob;
+
+            ctx.save();
+
+            // Glow
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.1)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Chip
+            ctx.fillStyle = '#2e7d32';
+            ctx.beginPath();
+            ctx.roundRect(cx - 9, cy - 9, 18, 18, 3);
+            ctx.fill();
+
+            // Pins
+            ctx.strokeStyle = '#81c784';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            for (let i = -1; i <= 1; i++) {
+                ctx.moveTo(cx + i * 5, cy - 9); ctx.lineTo(cx + i * 5, cy - 13);
+                ctx.moveTo(cx + i * 5, cy + 9); ctx.lineTo(cx + i * 5, cy + 13);
+                ctx.moveTo(cx - 9, cy + i * 5); ctx.lineTo(cx - 13, cy + i * 5);
+                ctx.moveTo(cx + 9, cy + i * 5); ctx.lineTo(cx + 13, cy + i * 5);
+            }
+            ctx.stroke();
+
+            // AI
+            ctx.fillStyle = '#c8e6c9';
+            ctx.font = 'bold 8px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('AI', cx, cy + 1);
+
+            ctx.restore();
+        }
+
+        function drawSlipper(s) {
+            ctx.save();
+            ctx.translate(s.x, s.y);
+            ctx.rotate(s.rot);
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.06)';
+            ctx.beginPath();
+            ctx.ellipse(3, 3, s.w / 2, s.h / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.drawImage(slipperImg, -s.w / 2, -s.h / 2, s.w, s.h);
+            ctx.restore();
+        }
+
+        function drawFloor() {
+            // Subtle grid
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            const offset = (frameCount * 0.3) % 40;
+            for (let y = offset; y < H; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+                ctx.stroke();
+            }
+            for (let x = 0; x < W; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+                ctx.stroke();
+            }
+        }
+
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        // ---- Collision ----
+        function circleCollide(ax, ay, ar, bx, by, br) {
+            const dx = ax - bx, dy = ay - by;
+            return dx * dx + dy * dy < (ar + br) * (ar + br);
+        }
+
+        // ---- Game logic ----
+        function reset() {
+            roach.x = W / 2;
+            roach.targetX = W / 2;
+            slippers = [];
+            chips = [];
+            particles = [];
+            score = 0;
+            frameCount = 0;
+            shieldTimer = 0;
+            gameOver = false;
+            scoreEl.textContent = '0';
+        }
+
+        function update() {
+            frameCount++;
+            const d = getDifficulty();
+
+            roach.update();
+
+            if (shieldTimer > 0) shieldTimer--;
+
+            // Spawn
+            if (frameCount % Math.round(d.slipperInterval) === 0) spawnSlipper();
+            if (frameCount % Math.round(d.chipInterval) === 0) spawnChip();
+
+            // Slippers
+            for (let i = slippers.length - 1; i >= 0; i--) {
+                const s = slippers[i];
+                s.y += s.speed;
+                s.rot += s.rotSpeed;
+                if (s.y > H + 60) { slippers.splice(i, 1); continue; }
+
+                if (circleCollide(roach.x, roach.y, 14, s.x, s.y, s.h * 0.35)) {
+                    if (shieldTimer > 0) {
+                        spawnParticles(s.x, s.y, '#4caf50', 8);
+                        slippers.splice(i, 1);
+                    } else {
+                        gameOver = true;
+                        spawnParticles(roach.x, roach.y, '#e74c3c', 15);
+                        if (score > best) {
+                            best = score;
+                            localStorage.setItem('cucaracha_best2', best.toString());
+                            bestEl.textContent = best;
+                        }
+                    }
+                }
+            }
+
+            // Chips
+            for (let i = chips.length - 1; i >= 0; i--) {
+                const c = chips[i];
+                c.y += c.speed;
+                if (c.y > H + 30) { chips.splice(i, 1); continue; }
+
+                if (circleCollide(roach.x, roach.y, 16, c.x, c.y, 12)) {
+                    shieldTimer = 180; // 3 seconds at 60fps
+                    score += 50;
+                    scoreEl.textContent = score;
+                    spawnParticles(c.x, c.y, '#4caf50', 10);
+                    chips.splice(i, 1);
+                }
+            }
+
+            // Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                p.life--;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Score per second
+            if (frameCount % 6 === 0) {
+                score++;
+                scoreEl.textContent = score;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            drawFloor();
+
+            for (const s of slippers) drawSlipper(s);
+            for (const c of chips) drawChip(c);
+            drawParticles();
+            roach.draw();
+
+            // Timer display top-right
+            ctx.fillStyle = '#ddd';
+            ctx.font = '13px monospace';
+            ctx.textAlign = 'right';
+            const secs = (frameCount / 60).toFixed(1);
+            ctx.fillText(secs + 's', W - 12, 20);
+
+            if (shieldTimer > 0) {
+                ctx.fillStyle = '#4caf50';
+                ctx.font = 'bold 11px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('SHIELD ' + Math.ceil(shieldTimer / 60) + 's', roach.x, roach.y - 30);
+            }
+        }
+
+        function drawGameOver() {
+            draw();
+            ctx.fillStyle = 'rgba(255,255,255,0.88)';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 20px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('300 million years of evolution', W / 2, H / 2 - 24);
+            ctx.fillText('ended here.', W / 2, H / 2 + 2);
+
+            ctx.font = '13px monospace';
+            ctx.fillStyle = '#aaa';
+            ctx.fillText('Click or tap to try again', W / 2, H / 2 + 36);
+        }
+
+        // ---- Loop ----
+        function loop() {
+            if (running && !gameOver) {
+                update();
+                draw();
+            } else if (gameOver) {
+                drawGameOver();
+            }
+            requestAnimationFrame(loop);
+        }
+
+        function start() {
+            if (gameOver) {
+                reset();
+                running = true;
+                overlay.style.display = 'none';
+            } else if (!running) {
+                running = true;
+                overlay.style.display = 'none';
+            }
+        }
+
+        // ---- Input ----
+        function getRelativeX(clientX) {
+            const rect = canvas.getBoundingClientRect();
+            return ((clientX - rect.left) / rect.width) * W;
+        }
+
+        wrapper.addEventListener('mousemove', e => {
+            roach.targetX = getRelativeX(e.clientX);
+        });
+
+        wrapper.addEventListener('touchmove', e => {
+            e.preventDefault();
+            roach.targetX = getRelativeX(e.touches[0].clientX);
+        }, { passive: false });
+
+        wrapper.addEventListener('touchstart', e => {
+            e.preventDefault();
+            roach.targetX = getRelativeX(e.touches[0].clientX);
+            start();
+        }, { passive: false });
+
+        wrapper.addEventListener('click', e => {
+            roach.targetX = getRelativeX(e.clientX);
+            start();
+        });
+
+        // ---- HiDPI ----
+        function resize() {
+            dpr = window.devicePixelRatio || 1;
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        loop();
+    })();
+    </script>
 </body>
 </html>
