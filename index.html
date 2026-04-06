@@ -661,6 +661,8 @@
         shareBtn.addEventListener('mouseenter', () => { shareBtn.style.background = '#555'; });
         shareBtn.addEventListener('mouseleave', () => { shareBtn.style.background = '#333'; });
         shareBtn.addEventListener('click', e => { e.stopPropagation(); shareResult(); });
+        shareBtn.addEventListener('touchstart', e => { e.stopPropagation(); }, { passive: false });
+        shareBtn.addEventListener('touchend', e => { e.stopPropagation(); e.preventDefault(); shareResult(); }, { passive: false });
         wrapper.appendChild(shareBtn);
 
         function drawGameOver() {
