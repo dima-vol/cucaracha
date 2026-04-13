@@ -90,6 +90,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .ba-after{background:linear-gradient(135deg,#2d4a2d,#1a3a1a,#2d4a2d);position:relative}
 .ba-pool{position:absolute;bottom:8px;right:12px;width:40px;height:22px;background:linear-gradient(135deg,#38bdf8,#0ea5e9);border-radius:12px 12px 8px 8px;box-shadow:0 0 8px rgba(56,189,248,.3)}
 .ba-arrow{color:#6b7280;font-size:16px}
+.ic{width:18px;height:18px;display:inline-block;vertical-align:middle}
+.ic svg{width:100%;height:100%}
 /* Selection overlay */
 .sel-box{position:absolute;border:2px dashed #818cf8;background:rgba(129,140,248,.05);border-radius:4px;display:none;z-index:20}
 .rec-btn{position:absolute;top:-36px;left:50%;transform:translateX(-50%);background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -124,7 +126,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .tvp-map{width:50px;background:#1a2e1a;border-radius:3px;margin-left:4px}
 .notif{background:#161616;border:1px solid #2a2a2a;border-radius:8px;padding:10px 14px;font-size:13px;color:#9ca3af;margin-bottom:12px;animation:su .4s ease-out}
 .notif b{color:#4ade80}
-.acts{display:flex;gap:10px;margin-top:16px}
+.tw-auth{background:#071a0e;border:1px solid #16a34a;border-radius:8px;padding:8px 14px;font-size:13px;color:#4ade80;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.tw-auth b{color:#e5e7eb}
 /* Fake cursor */
 .ptr{position:fixed;width:20px;height:20px;z-index:999;pointer-events:none;transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1);opacity:0}
 .ptr.on{opacity:1}
@@ -135,11 +138,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 <div class="screen active" id="s1">
-  <div class="app"><div class="side"><div class="logo">🪳 cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="ni">Templates</div>
+  <div class="app"><div class="side"><div class="logo"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e8930a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg></span> cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="ni">Templates</div>
     <div class="recent"><div class="rc-title">Recent</div>
-      <div class="rc">🛒 E-commerce returns AI<span class="rc-date">2d ago</span></div>
-      <div class="rc">📊 Analytics dashboard<span class="rc-date">5d ago</span></div>
-      <div class="rc">🤖 Support chatbot<span class="rc-date">1w ago</span></div>
+      <div class="rc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 10h6M9 14h4"/></svg></span> E-commerce returns AI<span class="rc-date">2d ago</span></div>
+      <div class="rc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 5-5"/></svg></span> Analytics dashboard<span class="rc-date">5d ago</span></div>
+      <div class="rc"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span> Support chatbot<span class="rc-date">1w ago</span></div>
     </div>
     <div class="sbot">Pro plan</div></div>
   <div class="mn"><div class="top"><span class="bc">Projects / <b>New demo</b></span><div class="av">DK</div></div>
@@ -148,7 +151,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <p class="sub">We'll generate a working demo, record a video, and draft your post.</p>
     <div class="ibox"><div id="tt"></div><span class="cur">|</span></div>
     <div id="aisummary" style="display:none" class="ai-summary">
-      <div class="ai-tag">🏠 Real Estate</div><div class="ai-tag">📡 Satellite AI</div><div class="ai-tag">📬 Direct Mail</div><div class="ai-tag">💰 ROI Calculator</div>
+      <div class="ai-tag"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span> Real Estate</div><div class="ai-tag"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg></span> Satellite AI</div><div class="ai-tag"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg></span> Direct Mail</div><div class="ai-tag"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span> ROI Calculator</div>
     </div>
     <div class="opts"><div><label>Platform</label><div class="sel">Twitter / X ▾</div></div><div><label>Style</label><div class="sel">someone build this ▾</div></div><div><label>Duration</label><div class="sel">~30 sec ▾</div></div></div>
     <button class="btn" id="gobtn">Generate demo →</button>
@@ -163,7 +166,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 <div class="screen" id="s2">
   <div class="pf">
-    <div class="pfs"><div class="pfl">🏊 PoolScout AI</div><div class="pn on">Dashboard</div><div class="pn">Campaigns</div><div class="pn">Prospects</div><div class="pn">Postcards</div><div class="pn">Analytics</div></div>
+    <div class="pfs"><div class="pfl"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><circle cx="12" cy="7" r="4"/></svg></span> PoolScout AI</div><div class="pn on">Dashboard</div><div class="pn">Campaigns</div><div class="pn">Prospects</div><div class="pn">Postcards</div><div class="pn">Analytics</div></div>
     <div class="pfm">
       <div class="pft"><span>Campaign: <b>Sun Belt — Mid-Market</b></span><div class="live"><span class="ldot"></span> LIVE</div></div>
       <div class="kpi-bar">
@@ -176,12 +179,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <div class="pfl2">
           <div class="tabs"><span class="tab on">Activity</span><span class="tab">Prospects</span><span class="tab">Postcards</span><span class="tab">Bookings</span></div>
           <div class="evts" id="evts">
-            <div class="ev" id="e0"><div class="evi">🎯</div><div class="evb"><div class="evt">Pool-ready zone identified</div><div class="evs">Built 2013 · 24,965 sqft · setbacks cleared</div></div><div class="evtm">8s ago</div></div>
-            <div class="ev" id="e1"><div class="evi">📡</div><div class="evb"><div class="evt">Lot scanned · Tampa</div><div class="evs">24,965 sqft via satellite imagery</div></div><div class="evtm">3s ago</div></div>
-            <div class="ev" id="e2"><div class="evi">🏠</div><div class="evb"><div class="evt">Homeowner matched</div><div class="evs">Public records · Wesley Chapel, FL</div></div><div class="evtm">just now</div></div>
-            <div class="ev" id="e3"><div class="evi">💰</div><div class="evb"><div class="evt">ROI calculated</div><div class="evs">+$37,500 estimated value lift</div></div><div class="evtm">just now</div></div>
-            <div class="ev" id="e4"><div class="evi">🎨</div><div class="evb"><div class="evt">Pool render complete</div><div class="evs">Custom L-shape design generated</div></div><div class="evtm">just now</div></div>
-            <div class="ev" id="e5"><div class="evi">📬</div><div class="evb"><div class="evt">Postcard queued</div><div class="evs">Before/after + ROI breakdown</div></div><div class="evtm">just now</div></div>
+            <div class="ev" id="e0"><div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg></span></div><div class="evb"><div class="evt">Pool-ready zone identified</div><div class="evs">Built 2013 · 24,965 sqft · setbacks cleared</div></div><div class="evtm">8s ago</div></div>
+            <div class="ev" id="e1"><div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg></span></div><div class="evb"><div class="evt">Lot scanned · Tampa</div><div class="evs">24,965 sqft via satellite imagery</div></div><div class="evtm">3s ago</div></div>
+            <div class="ev" id="e2"><div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e8930a" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></div><div class="evb"><div class="evt">Homeowner matched</div><div class="evs">Public records · Wesley Chapel, FL</div></div><div class="evtm">just now</div></div>
+            <div class="ev" id="e3"><div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span></div><div class="evb"><div class="evt">ROI calculated</div><div class="evs">+$37,500 estimated value lift</div></div><div class="evtm">just now</div></div>
+            <div class="ev" id="e4"><div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span></div><div class="evb"><div class="evt">Pool render complete</div><div class="evs">Custom L-shape design generated</div></div><div class="evtm">just now</div></div>
+            <div class="ev" id="e5"><div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg></span></div><div class="evb"><div class="evt">Postcard queued</div><div class="evs">Before/after + ROI breakdown</div></div><div class="evtm">just now</div></div>
           </div>
         </div>
         <div class="pfr">
@@ -209,11 +212,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 <div class="screen" id="s3">
-  <div class="app"><div class="side"><div class="logo">🪳 cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="sbot">Pro plan</div></div>
+  <div class="app"><div class="side"><div class="logo"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#e8930a" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg></span> cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="sbot">Pro plan</div></div>
   <div class="mn"><div class="top"><span class="bc">Projects / <b>Post ready ✓</b></span><div class="av">DK</div></div>
   <div class="cnt">
-    <h2 class="h2">Your post is ready</h2>
-    <p class="sub">Preview how it will appear on Twitter / X</p>
+    <div class="tw-auth"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg></span> Connected to Twitter/X as <b>@alexbuilds</b></div>
+    <h2 class="h2">Post published</h2>
+    <p class="sub">Your demo is now live on Twitter / X</p>
     <div class="tw">
       <div class="twh">
         <div class="twa">AC</div>
@@ -223,7 +227,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       </div>
       <div class="twb">someone build this: AI that scans satellite images, finds homes without pools, renders a custom pool design in their backyard, and auto-sends a personalized postcard with the design + ROI numbers.
 
-pool contractors would pay anything for this 🏊‍♂️</div>
+pool contractors would pay anything for this</div>
       <div class="twvid">
         <div class="twvid-bg"></div>
         <div class="twvid-preview">
@@ -234,7 +238,7 @@ pool contractors would pay anything for this 🏊‍♂️</div>
         <div class="twvid-label">PoolScout AI — Demo</div>
         <div class="twvid-dur">0:27</div>
       </div>
-      <div class="notif" id="notif" style="display:none">📈 Your post is gaining traction — <b id="nViews">0</b> views in 2 minutes</div>
+      <div class="notif" id="notif" style="display:none"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg></span> Your post is gaining traction — <b id="nViews">0</b> views in 2 minutes</div>
       <div class="tw-time">8:42 PM · Apr 13, 2026 · <span id="mv">0</span> Views</div>
       <div class="tw-stats">
         <div><b id="mrt">0</b><em> Reposts</em></div>
@@ -243,7 +247,6 @@ pool contractors would pay anything for this 🏊‍♂️</div>
         <div><b id="mbk">0</b><em> Bookmarks</em></div>
       </div>
     </div>
-    <div class="acts"><button class="btn">Copy post</button><button class="btn" style="background:#1d9bf0;color:#fff">Open Twitter →</button><button class="btn" style="background:transparent;border:1px solid #2a2a2a;color:#9ca3af">+ Create another</button></div>
   </div></div></div>
 </div>
 <div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-6 1.5L9 20z" fill="#fff" stroke="#000" stroke-width="1.5"/></svg></div>
@@ -370,7 +373,7 @@ function startRec(){
   const iv=setInterval(()=>{s++;t.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},1000);
   // More events during recording
   setTimeout(()=>{
-    const el=document.createElement('div');el.className='ev';el.innerHTML='<div class="evi">✉️</div><div class="evb"><div class="evt">Postcard sent</div><div class="evs">Priority mail · Tampa, FL</div></div><div class="evtm">now</div>';
+    const el=document.createElement('div');el.className='ev';el.innerHTML='<div class="evi"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></span></div><div class="evb"><div class="evt">Postcard sent</div><div class="evs">Priority mail · Tampa, FL</div></div><div class="evtm">now</div>';
     document.getElementById('evts').appendChild(el);
     setTimeout(()=>el.classList.add('vis'),50);
   },1500);
