@@ -89,6 +89,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .twpl{width:48px;height:48px;background:rgba(255,255,255,.2);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
 .twm{display:flex;gap:24px;font-size:13px;color:#6b7280}.twm em{font-style:normal;font-variant-numeric:tabular-nums}
 .acts{display:flex;gap:10px}
+/* Fake cursor */
+.ptr{position:fixed;width:20px;height:20px;z-index:999;pointer-events:none;transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1);opacity:0}
+.ptr.on{opacity:1}
+.ptr svg{width:20px;height:20px;filter:drop-shadow(1px 2px 2px rgba(0,0,0,.5))}
+.ptr.click::after{content:'';position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.3);animation:ck .3s ease-out forwards}
+@keyframes ck{0%{transform:scale(0);opacity:1}100%{transform:scale(2);opacity:0}}
 </style>
 </head>
 <body>
@@ -162,9 +168,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="acts"><button class="btn">Copy post</button><button class="btn" style="background:#1d9bf0;color:#fff">Open Twitter →</button></div>
   </div></div></div>
 </div>
+<div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-6 1.5L9 20z" fill="#fff" stroke="#000" stroke-width="1.5"/></svg></div>
 <script>
 let cur=0;
 function show(n){document.getElementById('s'+(cur+1)).classList.remove('active');cur=n;document.getElementById('s'+(cur+1)).classList.add('active');}
+
+// Cursor
+const ptr=document.getElementById('ptr');
+function moveTo(x,y,cb){ptr.style.left=x+'px';ptr.style.top=y+'px';if(cb)setTimeout(cb,650);}
+function click(cb){ptr.classList.add('click');setTimeout(()=>{ptr.classList.remove('click');if(cb)cb();},300);}
+function moveAndClick(x,y,cb){moveTo(x,y,()=>click(cb));}
+function showPtr(){ptr.classList.add('on');}
+function hidePtr(){ptr.classList.remove('on');}
 
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.round(n)+'';}
 function countUp(el,tgt,dur){let v=0;const s=tgt/((dur||1000)/16);const iv=setInterval(()=>{v+=s;if(v>=tgt){v=tgt;clearInterval(iv);}el.textContent=fmt(v);},16);}
@@ -173,7 +188,11 @@ function countUp(el,tgt,dur){let v=0;const s=tgt/((dur||1000)/16);const iv=setIn
 const txt="An AI tool that scans satellite imagery to find homes without pools, renders a pool design into their backyard, calculates ROI, and sends personalized postcards to homeowners.";
 let ci=0;
 function typ(){
-  if(ci>=txt.length){setTimeout(startGen,1000);return;}
+  if(ci>=txt.length){
+    const b=document.getElementById('gobtn').getBoundingClientRect();
+    setTimeout(()=>moveAndClick(b.left+60,b.top+15,()=>setTimeout(startGen,300)),600);
+    return;
+  }
   document.getElementById('tt').textContent=txt.slice(0,++ci);
   setTimeout(typ,30);
 }
@@ -201,35 +220,49 @@ function startGen(){
   nxt();
 }
 
-// S2: MVP with events appearing, then selection box animates
+// S2: MVP with events appearing, cursor explores, then selection
 function startMVP(){
   const evs=['e0','e1','e2','e3','e4','e5'];
   evs.forEach((id,i)=>{setTimeout(()=>{document.getElementById(id).classList.add('vis');},300+i*500);});
+  // Cursor moves around MVP during events
+  setTimeout(()=>{const r=document.querySelector('.pfr');if(r){const b=r.getBoundingClientRect();moveTo(b.left+100,b.top+80);}},800);
+  setTimeout(()=>{const m=document.querySelector('.map');if(m){const b=m.getBoundingClientRect();moveTo(b.left+100,b.top+80);}},2000);
+  setTimeout(()=>{const e=document.querySelector('.evts');if(e){const b=e.getBoundingClientRect();moveTo(b.left+150,b.top+60);}},3200);
   // After events done, animate selection box
-  setTimeout(animateSelect,evs.length*500+1000);
+  setTimeout(animateSelect,evs.length*500+1200);
 }
 
-// Animate selection rectangle drawing
+// Animate selection rectangle — cursor drags it
 function animateSelect(){
   const box=document.getElementById('selbox');
   const pfc=document.querySelector('.pfc');
   const r=pfc.getBoundingClientRect();
-  box.style.display='block';
-  box.style.left=(r.left+10)+'px';box.style.top=(r.top+10)+'px';
-  box.style.width='0';box.style.height='0';
-  // Animate growing
-  let w=0,h=0;
-  const tw=r.width-20,th=r.height-20;
-  const iv=setInterval(()=>{
-    w+=tw/30;h+=th/30;
-    if(w>=tw){w=tw;h=th;clearInterval(iv);showRecBtn();}
-    box.style.width=w+'px';box.style.height=h+'px';
-  },16);
+  const sx=r.left+10,sy=r.top+10;
+  // Move cursor to start corner
+  moveTo(sx,sy,()=>{
+    click(()=>{
+      box.style.display='block';
+      box.style.left=sx+'px';box.style.top=sy+'px';
+      box.style.width='0';box.style.height='0';
+      let w=0,h=0;
+      const tw=r.width-20,th=r.height-20;
+      const iv=setInterval(()=>{
+        w+=tw/40;h+=th/40;
+        if(w>=tw){w=tw;h=th;clearInterval(iv);showRecBtn();}
+        box.style.width=w+'px';box.style.height=h+'px';
+        ptr.style.left=(sx+w)+'px';ptr.style.top=(sy+h)+'px';
+      },16);
+    });
+  });
 }
 
 function showRecBtn(){
   document.getElementById('recbtn').style.display='flex';
-  setTimeout(startRec,800);
+  // Cursor moves to REC button and clicks it
+  setTimeout(()=>{
+    const rb=document.getElementById('recbtn').getBoundingClientRect();
+    moveAndClick(rb.left+40,rb.top+10,()=>setTimeout(startRec,200));
+  },500);
 }
 
 function startRec(){
@@ -257,7 +290,12 @@ function startTweet(){
   },300);
 }
 
-setTimeout(typ,800);
+// Start: cursor moves to input, then types
+setTimeout(()=>{
+  showPtr();
+  const ib=document.querySelector('.ibox').getBoundingClientRect();
+  moveAndClick(ib.left+40,ib.top+30,()=>setTimeout(typ,300));
+},600);
 </script>
 </body>
 </html>
