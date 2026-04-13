@@ -15,6 +15,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .ni{padding:8px 12px;border-radius:8px;font-size:14px;color:#6b7280;margin-bottom:2px}
 .ni.on{background:#1a1a1a;color:#fff;font-weight:600}
 .sbot{margin-top:auto;font-size:12px;color:#6b7280;background:#1a1a1a;padding:6px 10px;border-radius:6px;text-align:center}
+.recent{margin-top:20px;border-top:1px solid #1e1e1e;padding-top:12px}
+.rc-title{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;padding:0 4px}
+.rc{padding:6px 8px;font-size:12px;color:#6b7280;border-radius:6px;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.rc-date{margin-left:auto;font-size:10px;color:#4b5563}
+.ai-summary{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.ai-tag{background:#1a1a2e;border:1px solid #2a2a3e;color:#a5b4fc;padding:4px 10px;border-radius:6px;font-size:12px;animation:su .3s ease-out}
+.stdet{font-size:11px;color:#4b5563;margin-left:4px}
 .mn{flex:1;display:flex;flex-direction:column}
 .top{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;border-bottom:1px solid #1e1e1e;background:#111}
 .bc{font-size:14px;color:#6b7280}.bc b{color:#e5e7eb}
@@ -71,6 +78,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .sts{display:flex;flex-wrap:wrap;gap:8px}
 .stt{flex:1 1 45%;background:#161616;border-radius:6px;padding:8px 10px;font-size:12px;display:flex;justify-content:space-between}
 .stl{color:#6b7280}.stv{font-weight:600;color:#e5e7eb}.grn{color:#4ade80}
+.kpi-bar{display:flex;gap:1px;background:#1e1e1e;border-bottom:1px solid #1e1e1e}
+.kpi{flex:1;background:#111;padding:10px 16px;text-align:center}
+.kpi-val{font-size:18px;font-weight:700;color:#e5e7eb;font-variant-numeric:tabular-nums}
+.kpi-lbl{font-size:11px;color:#6b7280;margin-top:2px}
+.ba-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.ba-card{flex:1;border-radius:6px;overflow:hidden;border:1px solid #1e1e1e}
+.ba-label{font-size:10px;color:#6b7280;background:#161616;padding:4px 8px;text-transform:uppercase;letter-spacing:.05em}
+.ba-img{height:70px;background:#1a2e1a}
+.ba-before{background:linear-gradient(135deg,#2d4a2d,#1a3a1a,#2d4a2d)}
+.ba-after{background:linear-gradient(135deg,#2d4a2d,#1a3a1a,#2d4a2d);position:relative}
+.ba-pool{position:absolute;bottom:8px;right:12px;width:40px;height:22px;background:linear-gradient(135deg,#38bdf8,#0ea5e9);border-radius:12px 12px 8px 8px;box-shadow:0 0 8px rgba(56,189,248,.3)}
+.ba-arrow{color:#6b7280;font-size:16px}
 /* Selection overlay */
 .sel-box{position:absolute;border:2px dashed #818cf8;background:rgba(129,140,248,.05);border-radius:4px;display:none;z-index:20}
 .rec-btn{position:absolute;top:-36px;left:50%;transform:translateX(-50%);background:#dc2626;color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
@@ -95,6 +114,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .tw-stats{display:flex;gap:20px;padding:12px 0;border-bottom:1px solid #2f3336;font-size:14px;color:#71767b}
 .tw-stats b{color:#e7e9ea;font-weight:700;margin-right:3px}
 .tw-stats em{font-style:normal}
+.twvid-preview{position:absolute;inset:15px;display:flex;border-radius:6px;overflow:hidden;opacity:.35;z-index:0}
+.tvp-sidebar{width:30px;background:#1a1a2e}
+.tvp-main{flex:1;display:flex;flex-direction:column;background:#111}
+.tvp-topbar{height:8px;background:#1e1e1e}
+.tvp-content{flex:1;display:flex;padding:6px}
+.tvp-list{flex:1;display:flex;flex-direction:column;gap:4px;padding:4px}
+.tvp-line{height:6px;background:#1e1e1e;border-radius:2px;width:80%}
+.tvp-map{width:50px;background:#1a2e1a;border-radius:3px;margin-left:4px}
+.notif{background:#161616;border:1px solid #2a2a2a;border-radius:8px;padding:10px 14px;font-size:13px;color:#9ca3af;margin-bottom:12px;animation:su .4s ease-out}
+.notif b{color:#4ade80}
 .acts{display:flex;gap:10px;margin-top:16px}
 /* Fake cursor */
 .ptr{position:fixed;width:20px;height:20px;z-index:999;pointer-events:none;transition:left .6s cubic-bezier(.4,0,.2,1),top .6s cubic-bezier(.4,0,.2,1);opacity:0}
@@ -106,19 +135,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </head>
 <body>
 <div class="screen active" id="s1">
-  <div class="app"><div class="side"><div class="logo">🪳 cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="ni">Templates</div><div class="sbot">Pro plan</div></div>
+  <div class="app"><div class="side"><div class="logo">🪳 cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="ni">Templates</div>
+    <div class="recent"><div class="rc-title">Recent</div>
+      <div class="rc">🛒 E-commerce returns AI<span class="rc-date">2d ago</span></div>
+      <div class="rc">📊 Analytics dashboard<span class="rc-date">5d ago</span></div>
+      <div class="rc">🤖 Support chatbot<span class="rc-date">1w ago</span></div>
+    </div>
+    <div class="sbot">Pro plan</div></div>
   <div class="mn"><div class="top"><span class="bc">Projects / <b>New demo</b></span><div class="av">DK</div></div>
   <div class="cnt">
     <h2 class="h2">Describe your product idea</h2>
     <p class="sub">We'll generate a working demo, record a video, and draft your post.</p>
     <div class="ibox"><div id="tt"></div><span class="cur">|</span></div>
-    <div class="opts"><div><label>Platform</label><div class="sel">Twitter / X</div></div><div><label>Style</label><div class="sel">someone build this</div></div></div>
+    <div id="aisummary" style="display:none" class="ai-summary">
+      <div class="ai-tag">🏠 Real Estate</div><div class="ai-tag">📡 Satellite AI</div><div class="ai-tag">📬 Direct Mail</div><div class="ai-tag">💰 ROI Calculator</div>
+    </div>
+    <div class="opts"><div><label>Platform</label><div class="sel">Twitter / X ▾</div></div><div><label>Style</label><div class="sel">someone build this ▾</div></div><div><label>Duration</label><div class="sel">~30 sec ▾</div></div></div>
     <button class="btn" id="gobtn">Generate demo →</button>
     <div class="steps" id="gensteps" style="display:none;margin-top:24px">
-      <div class="st" id="g0"><span class="si">○</span><span>Analyzing concept</span><span class="stm" id="t0"></span></div>
-      <div class="st" id="g1"><span class="si">○</span><span>Building interface</span><span class="stm" id="t1"></span></div>
-      <div class="st" id="g2"><span class="si">○</span><span>Populating data</span><span class="stm" id="t2"></span></div>
-      <div class="st" id="g3"><span class="si">○</span><span>Preparing demo</span><span class="stm" id="t3"></span></div>
+      <div class="st" id="g0"><span class="si">○</span><span>Analyzing concept</span><span class="stdet" id="d0"></span><span class="stm" id="t0"></span></div>
+      <div class="st" id="g1"><span class="si">○</span><span>Building interface</span><span class="stdet" id="d1"></span><span class="stm" id="t1"></span></div>
+      <div class="st" id="g2"><span class="si">○</span><span>Populating data</span><span class="stdet" id="d2"></span><span class="stm" id="t2"></span></div>
+      <div class="st" id="g3"><span class="si">○</span><span>Preparing demo</span><span class="stdet" id="d3"></span><span class="stm" id="t3"></span></div>
     </div>
     <div class="bar" id="genbar" style="display:none"><div class="fill" id="genfill"></div></div>
   </div></div></div>
@@ -128,6 +166,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="pfs"><div class="pfl">🏊 PoolScout AI</div><div class="pn on">Dashboard</div><div class="pn">Campaigns</div><div class="pn">Prospects</div><div class="pn">Postcards</div><div class="pn">Analytics</div></div>
     <div class="pfm">
       <div class="pft"><span>Campaign: <b>Sun Belt — Mid-Market</b></span><div class="live"><span class="ldot"></span> LIVE</div></div>
+      <div class="kpi-bar">
+        <div class="kpi"><div class="kpi-val" id="kScanned">0</div><div class="kpi-lbl">Scanned</div></div>
+        <div class="kpi"><div class="kpi-val" id="kReady">0</div><div class="kpi-lbl">Pool-ready</div></div>
+        <div class="kpi"><div class="kpi-val" id="kSent">0</div><div class="kpi-lbl">Postcards sent</div></div>
+        <div class="kpi"><div class="kpi-val" id="kRate">0%</div><div class="kpi-lbl">Response rate</div></div>
+      </div>
       <div class="pfc">
         <div class="pfl2">
           <div class="tabs"><span class="tab on">Activity</span><span class="tab">Prospects</span><span class="tab">Postcards</span><span class="tab">Bookings</span></div>
@@ -144,6 +188,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
           <div class="addr">5475 Saddlebrook Way, Wesley Chapel, FL 33543</div>
           <div class="badge">24,965 sqft · pool-ready</div>
           <div class="map"><iframe src="https://www.google.com/maps/embed?pb=!1m1!1e1!2m1!1e1!3m2!1sen!2sus!4v1&center=28.1747,-82.3269&zoom=19&maptype=satellite" allowfullscreen loading="lazy"></iframe></div>
+          <div class="ba-row">
+            <div class="ba-card"><div class="ba-label">Before</div><div class="ba-img ba-before"></div></div>
+            <div class="ba-arrow">→</div>
+            <div class="ba-card"><div class="ba-label">After</div><div class="ba-img ba-after"><div class="ba-pool"></div></div></div>
+          </div>
           <div class="own"><span class="oav">C2</span><span>Homeowner · <em>confidential</em></span><span class="oloc">Wesley Chapel, FL</span></div>
           <div class="sts">
             <div class="stt"><span class="stl">Built</span><span class="stv">2013</span></div>
@@ -159,8 +208,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="sel-box" id="selbox"><div class="rec-btn" id="recbtn"><span class="rd"></span> Record demo</div><div class="rec-timer" id="rtim" style="display:none">00:00</div></div>
   </div>
 </div>
-<div class="screen" id="s3"></div>
-<div class="screen" id="s4">
+<div class="screen" id="s3">
   <div class="app"><div class="side"><div class="logo">🪳 cucaracha</div><div class="ni on">+ New demo</div><div class="ni">Projects</div><div class="sbot">Pro plan</div></div>
   <div class="mn"><div class="top"><span class="bc">Projects / <b>Post ready ✓</b></span><div class="av">DK</div></div>
   <div class="cnt">
@@ -178,10 +226,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 pool contractors would pay anything for this 🏊‍♂️</div>
       <div class="twvid">
         <div class="twvid-bg"></div>
+        <div class="twvid-preview">
+          <div class="tvp-sidebar"></div>
+          <div class="tvp-main"><div class="tvp-topbar"></div><div class="tvp-content"><div class="tvp-list"><div class="tvp-line"></div><div class="tvp-line"></div><div class="tvp-line"></div></div><div class="tvp-map"></div></div></div>
+        </div>
         <div class="twpl">▶</div>
         <div class="twvid-label">PoolScout AI — Demo</div>
         <div class="twvid-dur">0:27</div>
       </div>
+      <div class="notif" id="notif" style="display:none">📈 Your post is gaining traction — <b id="nViews">0</b> views in 2 minutes</div>
       <div class="tw-time">8:42 PM · Apr 13, 2026 · <span id="mv">0</span> Views</div>
       <div class="tw-stats">
         <div><b id="mrt">0</b><em> Reposts</em></div>
@@ -190,7 +243,7 @@ pool contractors would pay anything for this 🏊‍♂️</div>
         <div><b id="mbk">0</b><em> Bookmarks</em></div>
       </div>
     </div>
-    <div class="acts"><button class="btn">Copy post</button><button class="btn" style="background:#1d9bf0;color:#fff">Open Twitter →</button></div>
+    <div class="acts"><button class="btn">Copy post</button><button class="btn" style="background:#1d9bf0;color:#fff">Open Twitter →</button><button class="btn" style="background:transparent;border:1px solid #2a2a2a;color:#9ca3af">+ Create another</button></div>
   </div></div></div>
 </div>
 <div class="ptr" id="ptr"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-6 1.5L9 20z" fill="#fff" stroke="#000" stroke-width="1.5"/></svg></div>
@@ -222,21 +275,33 @@ function typ(){
   setTimeout(typ,30);
 }
 
-// S1: Generation steps
+// S1: Show AI summary tags, then generation steps
 function startGen(){
-  document.getElementById('gobtn').style.display='none';
-  document.getElementById('gensteps').style.display='flex';
-  document.getElementById('genbar').style.display='block';
+  // Show AI tags first
+  document.getElementById('aisummary').style.display='flex';
+  document.getElementById('gobtn').textContent='Generating...';
+  document.getElementById('gobtn').style.opacity='.5';
+  setTimeout(()=>{
+    document.getElementById('gobtn').style.display='none';
+    document.getElementById('gensteps').style.display='flex';
+    document.getElementById('genbar').style.display='block';
+    runSteps();
+  },800);
+}
+function runSteps(){
   const ss=document.querySelectorAll('.st');
   const tms=[1.8,2.4,1.6,1.2];
   const delays=[1400,1800,1200,1000];
+  const details=['Detected: SaaS dashboard, satellite view, CRM','4 components: sidebar, map, activity feed, stats','Sourcing addresses, pricing, property data...','Linking screens, adding transitions...'];
   let i=0;
   function nxt(){
     if(i>=ss.length){document.getElementById('genfill').style.width='100%';setTimeout(()=>{ show(1);startMVP();},600);return;}
     ss[i].classList.add('on');ss[i].querySelector('.si').textContent='●';
+    document.getElementById('d'+i).textContent='— '+details[i];
     setTimeout(()=>{
       ss[i].classList.remove('on');ss[i].classList.add('done');
       ss[i].querySelector('.si').textContent='✓';
+      document.getElementById('d'+i).textContent='';
       document.getElementById('t'+i).textContent=tms[i]+'s';
       document.getElementById('genfill').style.width=((i+1)/ss.length*100)+'%';
       i++;nxt();
@@ -245,8 +310,14 @@ function startGen(){
   nxt();
 }
 
-// S2: MVP with events appearing, cursor explores, then selection
+// S2: MVP with events, KPIs, cursor explores, then selection
 function startMVP(){
+  // KPI counters
+  countUp(document.getElementById('kScanned'),1247,2000);
+  countUp(document.getElementById('kReady'),89,1800);
+  countUp(document.getElementById('kSent'),23,1600);
+  const rEl=document.getElementById('kRate');
+  let rv=0;const ri=setInterval(()=>{rv+=0.2;if(rv>=12.4){rv=12.4;clearInterval(ri);}rEl.textContent=rv.toFixed(1)+'%';},16);
   const evs=['e0','e1','e2','e3','e4','e5'];
   evs.forEach((id,i)=>{setTimeout(()=>{document.getElementById(id).classList.add('vis');},300+i*500);});
   // Cursor moves around MVP during events
@@ -303,7 +374,7 @@ function startRec(){
     document.getElementById('evts').appendChild(el);
     setTimeout(()=>el.classList.add('vis'),50);
   },1500);
-  setTimeout(()=>{clearInterval(iv);show(3);startTweet();},4000);
+  setTimeout(()=>{clearInterval(iv);show(2);startTweet();},4000);
 }
 
 function startTweet(){
@@ -314,6 +385,11 @@ function startTweet(){
     countUp(document.getElementById('mbk'),89,1100);
     countUp(document.getElementById('mv'),1200000,1800);
   },300);
+  // Notification after metrics
+  setTimeout(()=>{
+    document.getElementById('notif').style.display='block';
+    countUp(document.getElementById('nViews'),1200000,1200);
+  },2200);
 }
 
 // Start: cursor moves to input, then types
