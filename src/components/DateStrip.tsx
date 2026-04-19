@@ -48,14 +48,20 @@ export function DateStrip({
   const selectedRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     selectedRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: "auto",
       inline: "center",
       block: "nearest",
     });
   }, [dayOffset]);
 
   return (
-    <div className="overflow-x-auto no-scrollbar border-b border-[var(--border)] bg-white">
+    <div
+      className="overflow-x-auto no-scrollbar border-b border-[var(--border)] bg-white"
+      style={{
+        scrollSnapType: "x mandatory",
+        scrollBehavior: "auto",
+      }}
+    >
       <div className="flex items-center gap-0.5 px-2 py-1.5 min-w-max">
         {days.map((d) => {
           const isToday = d.offset === 0;
@@ -71,8 +77,9 @@ export function DateStrip({
               type="button"
               onClick={() => onSelect(d.offset)}
               aria-pressed={isSelected}
+              style={{ scrollSnapAlign: "center" }}
               className={cn(
-                "flex-none flex flex-col items-center justify-center px-2.5 py-1.5 rounded-md transition-colors",
+                "flex-none flex flex-col items-center justify-center px-2.5 py-1.5 rounded-md",
                 isSelected
                   ? "border border-slate-900"
                   : "border border-transparent hover:bg-slate-50"

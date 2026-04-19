@@ -122,7 +122,10 @@ export function CityRow({
       {compact ? (
         <div className="h-1" />
       ) : (
-        <div ref={barScrollRef} className="overflow-x-auto no-scrollbar">
+        <div
+          ref={barScrollRef}
+          className="overflow-x-auto no-scrollbar snap-hours"
+        >
           <TimeBar
             timezone={city.timezone}
             now={now}
