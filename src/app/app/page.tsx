@@ -93,6 +93,14 @@ function AppInner() {
     reorder(String(active.id), String(over.id));
   };
 
+  // Changing the day shifts every column's absolute instant by 24h, so any
+  // lingering tap-selection no longer points at the hour the user picked.
+  // Clear it so the new view starts fresh.
+  const changeDay = (offset: number) => {
+    setDayOffset(offset);
+    setActiveIdx(null);
+  };
+
   const openDatePicker = () => {
     const el = dateInputRef.current;
     if (!el) return;
@@ -115,7 +123,7 @@ function AppInner() {
     const today = new Date(realNow);
     today.setHours(0, 0, 0, 0);
     const offset = Math.round((picked.getTime() - today.getTime()) / DAY_MS);
-    setDayOffset(offset);
+    changeDay(offset);
   };
 
   const toggleViewMode = () =>
@@ -173,7 +181,7 @@ function AppInner() {
           <DateStrip
             realNow={realNow}
             dayOffset={dayOffset}
-            onSelect={setDayOffset}
+            onSelect={changeDay}
           />
         )}
         <input

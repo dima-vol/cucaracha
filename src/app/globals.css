@@ -37,10 +37,7 @@ html, body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
-/* Hour-bar scroll: native momentum on iOS, no CSS snap. Final alignment
-   to the nearest hour is done in JS (ScrollSyncProvider) on scroll end,
-   so fast flicks aren't blocked and programmatic sync between bars
-   doesn't fight CSS snap. */
+/* Native momentum on iOS; snap to whole hours is handled in JS. */
 .snap-hours {
   -webkit-overflow-scrolling: touch;
 }
@@ -53,25 +50,39 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Hour cell with a thin right divider that keeps columns readable. */
+/* --- Hour cell ---------------------------------------------------------- */
 .tz-cell {
+  position: relative;
+  /* Remove the 300ms iOS tap delay and disable double-tap zoom so single
+     taps register instantly. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
 }
 
-/* Current-hour / tapped-hour indicators are drawn as inset box-shadows on
-   the cell itself, not as a separate overlay layer. This keeps them in
-   the bar's own compositor layer — they scroll natively with the bar,
-   with no per-frame JS or CSS-var repaint in the critical scroll path. */
-.tz-cell-now {
-  box-shadow:
-    inset 0 0 0 1px rgba(100, 116, 139, 0.55),
-    inset -1px 0 0 rgba(0, 0, 0, 0.05);
+/* "Now" and "active" rings are drawn as a pseudo-element overlay inset
+   to the cell's border box. Safari renders inset box-shadows inconsistently
+   at fractional pixel widths with rounded corners, so a dedicated border
+   on an ::after element is the robust approach. */
+.tz-cell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   border-radius: 4px;
+  pointer-events: none;
+  border: 0 solid transparent;
+  transition: border-color 90ms linear, border-width 90ms linear;
+}
+.tz-cell-now::after {
+  border-width: 1px;
+  border-color: rgba(234, 88, 12, 0.55); /* accent @ 55% */
+}
+.tz-cell-active::after {
+  border-width: 2px;
+  border-color: rgb(15, 23, 42); /* slate-900 */
 }
 .tz-cell-active {
-  background-color: rgba(15, 23, 42, 0.04) !important;
-  box-shadow:
-    inset 0 0 0 1.5px rgb(15, 23, 42),
-    inset -1px 0 0 rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
+  /* Visible wash under the ring so the selection reads clearly without
+     making the tier (day/evening/night) colour disappear. */
+  background-color: rgba(15, 23, 42, 0.08) !important;
 }
