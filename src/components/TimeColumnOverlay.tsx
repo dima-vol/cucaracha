@@ -2,22 +2,17 @@
 
 /**
  * Vertical indicators that span the entire city list:
- *   - "now": a thin rectangle outline around the current hour cell.
- *     Snapped to the hour grid and drawn in a subtle neutral tone —
- *     meant to be a reference, not a CTA.
- *   - "active": a bolder rectangle outline around the column the user
- *     tapped. Drawn on top of "now" so the selection always reads first.
+ *   - "now": a subtle 1-px rectangle around the current hour column.
+ *   - "active": a crisper 1.5-px rectangle around the column the user
+ *     tapped. Drawn on top of "now".
  *
- * Both live as a single absolutely-positioned layer at the list level so the
- * line is unbroken through every per-city header. Horizontal tracking is
- * driven by the `--scroll-x` CSS variable that ScrollSyncProvider keeps in
- * sync with the bars.
+ * Both live as a single absolutely-positioned layer at the list level so
+ * the strokes are unbroken through every per-city header. Horizontal
+ * tracking is driven by the `--scroll-x` CSS variable that
+ * ScrollSyncProvider keeps in sync with the bars.
  */
 type Props = {
-  /** Index of the current real hour within the bar (0..hours-1), or null
-   *  if real-now is outside the visible window. */
   nowIdx: number | null;
-  /** Index of a tapped column (0..hours-1), or null. */
   activeIdx: number | null;
   colWidth: number;
   hours: number;
@@ -49,13 +44,13 @@ export function TimeColumnOverlay({
       >
         {showNow && (
           <span
-            className="absolute inset-y-0 border border-slate-500/60 rounded-[3px]"
+            className="absolute inset-y-0 border border-slate-500/55 rounded-[4px]"
             style={{ left: nowIdx * colWidth, width: colWidth }}
           />
         )}
         {showActive && (
           <span
-            className="absolute inset-y-0 border border-slate-900 rounded-[3px] bg-slate-900/[0.04]"
+            className="absolute inset-y-0 border-[1.5px] border-slate-900 rounded-[4px] bg-slate-900/[0.035]"
             style={{ left: activeIdx * colWidth, width: colWidth }}
           />
         )}

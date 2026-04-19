@@ -145,24 +145,24 @@ function AppInner() {
   return (
     <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[var(--border)]">
-        <div className="px-4 h-12 flex items-center justify-between">
+        <div className="px-3 h-11 flex items-center">
           <button
             type="button"
             onClick={openDatePicker}
             aria-label="Jump to date"
-            className="w-9 h-9 -ml-1 rounded-full text-slate-500 hover:bg-slate-50 flex items-center justify-center"
+            className="flex-none w-8 h-8 rounded-full text-slate-500 hover:bg-slate-100 flex items-center justify-center"
           >
             <CalendarDays size={18} strokeWidth={1.8} />
           </button>
-          <div className="flex items-baseline gap-2">
-            <span className="text-[15px] font-semibold tracking-tight">
+          <div className="flex-1 flex items-baseline justify-center gap-1.5">
+            <span className="text-[16px] font-semibold tracking-tight text-slate-900 leading-none">
               Cucaracha
             </span>
-            <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">
+            <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
               Time Zones
             </span>
           </div>
-          <div className="flex items-center gap-0.5">
+          <div className="flex-none flex items-center">
             <button
               type="button"
               onClick={toggleViewMode}
@@ -172,7 +172,7 @@ function AppInner() {
                   : "Switch to bar view"
               }
               aria-pressed={viewMode === "list"}
-              className="w-9 h-9 rounded-full text-slate-500 hover:bg-slate-50 flex items-center justify-center"
+              className="w-8 h-8 rounded-full text-slate-500 hover:bg-slate-100 flex items-center justify-center"
             >
               {viewMode === "bars" ? (
                 <List size={18} strokeWidth={1.8} />
@@ -183,7 +183,7 @@ function AppInner() {
             <button
               type="button"
               onClick={() => setAddOpen(true)}
-              className="w-9 h-9 rounded-full text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+              className="w-8 h-8 rounded-full text-slate-700 hover:bg-slate-100 flex items-center justify-center"
               aria-label="Add city"
             >
               <Plus size={20} strokeWidth={2} />

@@ -18,7 +18,6 @@ type Props = {
   startOffsetHours: number;
   hours: number;
   colWidth: number;
-  /** If true, hide the hour bar and show only the summary row. */
   compact: boolean;
   onCellTap: (idx: number) => void;
   onRemove: () => void;
@@ -56,72 +55,85 @@ export function CityRow({
         transition,
         opacity: isDragging ? 0.7 : 1,
       }}
-      className={cn("group", isHome && "bg-[var(--home-tint)]")}
+      className={cn(
+        "group",
+        compact && "border-b border-[var(--border)]"
+      )}
     >
-      <div className="flex items-center gap-3 px-4 pt-1.5 pb-1">
+      {/* Header row — 36px total. Sits above the column overlay so the
+          "now" / "active" rectangle is visually clipped at every header
+          (matches the reference's per-bar stripe look). */}
+      <div
+        className={cn(
+          "relative z-10 flex items-center gap-2 px-4 h-9",
+          isHome ? "bg-[var(--home-tint)]" : "bg-white"
+        )}
+      >
+        {/* Fixed 28px column for home icon / offset label so city names
+            across rows line up regardless of label width. */}
         <button
           type="button"
           onClick={onMakeHome}
-          aria-label={isHome ? "Home city" : "Make home"}
-          className={cn(
-            "flex-none w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-slate-700",
-            isHome && "text-amber-600 hover:text-amber-700"
-          )}
+          aria-label={isHome ? "Home city" : "Make this home"}
+          className="flex-none w-7 h-7 -ml-1 rounded-md flex items-center justify-center"
         >
           {isHome ? (
-            <Home size={15} strokeWidth={2.4} fill="currentColor" />
+            <Home
+              size={15}
+              strokeWidth={2}
+              fill="currentColor"
+              className="text-amber-600"
+            />
           ) : offsetLabel ? (
-            <span className="text-[11px] font-semibold tabular-nums">
+            <span className="text-[11px] font-semibold tabular-nums text-slate-400">
               {offsetLabel}
             </span>
           ) : (
-            <Home size={15} strokeWidth={2} />
+            <Home size={15} strokeWidth={1.8} className="text-slate-300" />
           )}
         </button>
 
-        <div className="flex items-baseline gap-1.5 min-w-0 flex-1">
-          <span className="text-[18px] font-medium tracking-tight truncate">
-            {city.city}
-          </span>
+        {/* City name with inline superscript TZ abbreviation. */}
+        <h3 className="flex-1 min-w-0 truncate text-[17px] font-semibold tracking-tight text-slate-900 leading-none">
+          {city.city}
           {abbr && (
-            <span className="flex-none text-[10px] font-medium uppercase tracking-wider text-slate-400 relative -top-1.5">
+            <sup className="ml-1 text-[9px] font-medium uppercase tracking-[0.08em] text-slate-400 align-super relative -top-[1px]">
               {abbr}
-            </span>
+            </sup>
           )}
+        </h3>
+
+        {/* Clock — numeric baseline aligned with city name. */}
+        <div className="flex-none text-[17px] font-medium tabular-nums tracking-tight text-slate-900 leading-none whitespace-nowrap">
+          {clock.time}
+          <span className="ml-0.5 text-[11px] font-normal text-slate-400">
+            {clock.ampm}
+          </span>
         </div>
 
-        <div className="flex-none flex items-center gap-1.5">
-          <div className="text-right">
-            <div className="text-[19px] font-medium tabular-nums leading-none whitespace-nowrap">
-              {clock.time}
-              <span className="text-[11px] text-slate-400 ml-0.5">
-                {clock.ampm}
-              </span>
-            </div>
-          </div>
+        {/* 48px control cluster — keeps clocks aligned across rows. */}
+        <div className="flex-none flex items-center gap-0.5 -mr-1">
           <button
             type="button"
             onClick={onRemove}
             aria-label="Remove city"
-            className="w-6 h-6 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
+            className="w-7 h-7 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"
           >
-            <X size={14} />
+            <X size={14} strokeWidth={2} />
           </button>
           <button
             type="button"
-            aria-label="Reorder"
-            className="w-6 h-6 rounded-md text-slate-300 hover:text-slate-700 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
+            aria-label="Drag to reorder"
+            className="w-7 h-7 rounded-md text-slate-300 hover:text-slate-500 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
             {...attributes}
             {...listeners}
           >
-            <GripVertical size={16} />
+            <GripVertical size={16} strokeWidth={1.8} />
           </button>
         </div>
       </div>
 
-      {compact ? (
-        <div className="h-1" />
-      ) : (
+      {compact ? null : (
         <div
           ref={barScrollRef}
           className="overflow-x-auto no-scrollbar snap-hours"

@@ -13,9 +13,7 @@ type Props = {
   realNow: Date;
   dayOffset: number;
   onSelect: (offset: number) => void;
-  /** Days back from today to render. */
   back?: number;
-  /** Days forward from today to render. */
   forward?: number;
 };
 
@@ -26,9 +24,7 @@ export function DateStrip({
   back = 1,
   forward = 13,
 }: Props) {
-  // Rebuild the strip only when the calendar date changes, not on every
-  // minute tick — `realNow` updates frequently but the strip is identical
-  // for the whole day.
+  // Rebuild only when the calendar date rolls over, not on every minute tick.
   const todayKey =
     realNow.getFullYear() * 10000 +
     (realNow.getMonth() + 1) * 100 +
@@ -41,7 +37,7 @@ export function DateStrip({
         d.setDate(d.getDate() + offset);
         return { offset, date: d };
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- rebuilt per calendar day
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed per day
     [todayKey, back, forward]
   );
 
@@ -56,13 +52,16 @@ export function DateStrip({
 
   return (
     <div className="overflow-x-auto no-scrollbar border-b border-[var(--border)] bg-white">
-      <div className="flex items-center gap-0.5 px-2 py-1.5 min-w-max">
+      <div className="flex items-center gap-0 px-2 py-2 min-w-max">
         {days.map((d) => {
           const isToday = d.offset === 0;
           const isSelected = d.offset === dayOffset;
           const day = d.date.getDay();
           const dom = d.date.getDate();
           const month = d.date.getMonth();
+          // Show the month next to the number only on today, the currently
+          // selected day, or when the month rolls over — keeps the strip
+          // readable during month boundaries.
           const showMonth = isToday || isSelected || dom === 1;
           return (
             <button
@@ -71,8 +70,9 @@ export function DateStrip({
               type="button"
               onClick={() => onSelect(d.offset)}
               aria-pressed={isSelected}
+              aria-label={`${MONTH_LABELS[month]} ${dom}`}
               className={cn(
-                "flex-none flex flex-col items-center justify-center px-2.5 py-1.5 rounded-md",
+                "flex-none w-[60px] h-11 flex flex-col items-center justify-center rounded-lg",
                 isSelected
                   ? "border border-slate-900"
                   : "border border-transparent hover:bg-slate-50"
@@ -80,7 +80,7 @@ export function DateStrip({
             >
               <span
                 className={cn(
-                  "text-[10px] font-medium uppercase tracking-wider leading-tight",
+                  "text-[10px] font-semibold uppercase tracking-[0.1em] leading-none",
                   isToday ? "text-[var(--accent)]" : "text-slate-400"
                 )}
               >
@@ -88,7 +88,7 @@ export function DateStrip({
               </span>
               <span
                 className={cn(
-                  "text-[14px] font-semibold tabular-nums leading-tight mt-0.5",
+                  "mt-[3px] text-[13px] font-semibold tabular-nums tracking-tight leading-none",
                   isToday ? "text-[var(--accent)]" : "text-slate-900"
                 )}
               >

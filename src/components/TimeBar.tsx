@@ -7,13 +7,9 @@ const HOUR_MS = 60 * 60 * 1000;
 
 type Props = {
   timezone: string;
-  /** Reference instant (usually "now") */
   now: Date;
-  /** Start of the visible window, as an offset in hours from `now` */
   startOffsetHours: number;
-  /** Number of hour columns rendered */
   hours: number;
-  /** Column width in px */
   colWidth?: number;
   onCellTap?: (idx: number) => void;
 };
@@ -26,7 +22,6 @@ export function TimeBar({
   colWidth = 52,
   onCellTap,
 }: Props) {
-  // Align the reference start to a whole hour so every column lands on :00.
   const baseMs =
     now.getTime() + startOffsetHours * HOUR_MS - (now.getTime() % HOUR_MS);
 
@@ -41,50 +36,51 @@ export function TimeBar({
   return (
     <div
       className="flex items-stretch select-none"
-      style={{ width: hours * colWidth, height: 52 }}
+      style={{ width: hours * colWidth, height: 48 }}
     >
       {cells.map((c, i) => {
         const tier = hourTier(c.parts.hour24);
         const isMidnight = c.parts.hour24 === 0;
         const isNow = i === nowIdx;
+        const night = tier === "night";
         return (
           <button
             key={i}
             type="button"
             onClick={() => onCellTap?.(i)}
             className={cn(
-              "tz-cell relative flex-none flex flex-col items-center justify-center transition-colors",
+              "tz-cell relative flex-none flex items-center justify-center",
               tier === "day" && "bg-[var(--day-tint)]",
               tier === "evening" && "bg-[var(--evening-tint)]",
-              tier === "night" && "bg-[var(--night-tint)]"
+              night && "bg-[var(--night-tint)]"
             )}
             style={{ width: colWidth }}
             aria-label={`${c.parts.hour12}${c.parts.ampm} ${c.parts.month} ${c.parts.day}`}
             aria-current={isNow ? "time" : undefined}
           >
             {isMidnight ? (
-              <span className="flex flex-col items-center leading-tight">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-white/95 bg-[var(--daychip)] rounded px-1.5 py-0.5">
-                  {c.parts.month.toUpperCase()}
+              <span className="flex flex-col items-center justify-center leading-none rounded-[3px] bg-[var(--daychip)] px-1.5 py-1">
+                <span className="text-[8px] font-semibold uppercase tracking-[0.08em] text-white/95">
+                  {c.parts.month}
                 </span>
-                <span className="text-[11px] font-semibold mt-0.5 text-white/95">
+                <span className="mt-0.5 text-[11px] font-semibold tabular-nums text-white leading-none">
                   {c.parts.day}
                 </span>
               </span>
             ) : (
-              <span className="flex flex-col items-center leading-tight">
+              <span className="flex flex-col items-center justify-center leading-none">
                 <span
                   className={cn(
-                    "text-[15px] font-medium tabular-nums",
-                    tier === "night" ? "text-white" : "text-slate-700"
+                    "text-[14px] font-medium tabular-nums leading-none",
+                    night ? "text-white" : "text-slate-700"
                   )}
                 >
                   {c.parts.hour12}
                 </span>
                 <span
                   className={cn(
-                    "text-[9px] uppercase tracking-wide",
-                    tier === "night" ? "text-white/80" : "text-slate-500"
+                    "mt-[3px] text-[9px] font-medium uppercase tracking-[0.04em] leading-none",
+                    night ? "text-white/85" : "text-slate-400"
                   )}
                 >
                   {c.parts.ampm}
