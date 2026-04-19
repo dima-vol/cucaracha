@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Home, X } from "lucide-react";
@@ -14,11 +13,16 @@ type Props = {
   city: CityEntry;
   isHome: boolean;
   homeTz: string;
+  /** Wall-clock "now" used to pick out the current hour cell. */
   now: Date;
+  /** Reference instant for the bar window — differs from `now` when the
+   *  user has paged forward or back in the date strip. */
+  referenceNow: Date;
   startOffsetHours: number;
   hours: number;
   colWidth: number;
   compact: boolean;
+  activeIdx: number | null;
   onCellTap: (idx: number) => void;
   onRemove: () => void;
   onMakeHome: () => void;
@@ -29,10 +33,12 @@ export function CityRow({
   isHome,
   homeTz,
   now,
+  referenceNow,
   startOffsetHours,
   hours,
   colWidth,
   compact,
+  activeIdx,
   onCellTap,
   onRemove,
   onMakeHome,
@@ -40,9 +46,10 @@ export function CityRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: city.id });
 
-  const barScrollRef = useRef<HTMLDivElement | null>(null);
-  useScrollSync(barScrollRef);
+  const setBarRef = useScrollSync();
 
+  // Use `referenceNow` as the visible window anchor but `now` as the
+  // wall-clock reference for the city's own clock display.
   const clock = cityClock(city.timezone, now);
   const abbr = cityTzAbbr(city.timezone, now);
   const offsetLabel = isHome ? "" : offsetFromHomeLabel(homeTz, city.timezone, now);
@@ -60,17 +67,12 @@ export function CityRow({
         compact && "border-b border-[var(--border)]"
       )}
     >
-      {/* Header row — 36px total. Sits above the column overlay so the
-          "now" / "active" rectangle is visually clipped at every header
-          (matches the reference's per-bar stripe look). */}
       <div
         className={cn(
-          "relative z-10 flex items-center gap-2 px-4 h-9",
+          "flex items-center gap-2 px-4 h-9",
           isHome ? "bg-[var(--home-tint)]" : "bg-white"
         )}
       >
-        {/* Fixed 28px column for home icon / offset label so city names
-            across rows line up regardless of label width. */}
         <button
           type="button"
           onClick={onMakeHome}
@@ -93,7 +95,6 @@ export function CityRow({
           )}
         </button>
 
-        {/* City name with inline superscript TZ abbreviation. */}
         <h3 className="flex-1 min-w-0 truncate text-[17px] font-semibold tracking-tight text-slate-900 leading-none">
           {city.city}
           {abbr && (
@@ -103,7 +104,6 @@ export function CityRow({
           )}
         </h3>
 
-        {/* Clock — numeric baseline aligned with city name. */}
         <div className="flex-none text-[17px] font-medium tabular-nums tracking-tight text-slate-900 leading-none whitespace-nowrap">
           {clock.time}
           <span className="ml-0.5 text-[11px] font-normal text-slate-400">
@@ -111,7 +111,6 @@ export function CityRow({
           </span>
         </div>
 
-        {/* 48px control cluster — keeps clocks aligned across rows. */}
         <div className="flex-none flex items-center gap-0.5 -mr-1">
           <button
             type="button"
@@ -135,15 +134,17 @@ export function CityRow({
 
       {compact ? null : (
         <div
-          ref={barScrollRef}
+          ref={setBarRef}
           className="overflow-x-auto no-scrollbar snap-hours"
         >
           <TimeBar
             timezone={city.timezone}
             now={now}
+            referenceNow={referenceNow}
             startOffsetHours={startOffsetHours}
             hours={hours}
             colWidth={colWidth}
+            activeIdx={activeIdx}
             onCellTap={onCellTap}
           />
         </div>

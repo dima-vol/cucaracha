@@ -19,11 +19,7 @@ import { CalendarDays, List, LayoutList, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { CityRow } from "@/components/CityRow";
 import { AddCitySheet } from "@/components/AddCitySheet";
-import {
-  ScrollSyncProvider,
-  useScrollSyncContainer,
-} from "@/components/ScrollSync";
-import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
+import { ScrollSyncProvider } from "@/components/ScrollSync";
 import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
 
@@ -54,11 +50,8 @@ function AppInner() {
   const [viewMode, setViewMode] = useState<ViewMode>("bars");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-  const listRef = useRef<HTMLDivElement>(null);
-  useScrollSyncContainer(listRef);
-
-  // Refresh on every minute boundary so the displayed clocks never lag more
-  // than a few ms behind wall-clock time.
+  // Refresh on every minute boundary so city clocks never lag the wall
+  // clock by more than a few ms.
   useEffect(() => {
     let timeoutId: number;
     const tick = () => {
@@ -86,25 +79,13 @@ function AppInner() {
     [cities]
   );
 
-  // The "view" instant: same wall-clock time as real now, on the selected
-  // day. Bars compute their hour cells against this.
-  const viewNow = useMemo(() => {
+  // Anchor instant for the bar window. When the user is on today this is
+  // just the wall clock; when they've paged forward it shifts by 24h per
+  // day but keeps the same time-of-day.
+  const referenceNow = useMemo(() => {
     if (dayOffset === 0) return realNow;
     return new Date(realNow.getTime() + dayOffset * DAY_MS);
   }, [realNow, dayOffset]);
-
-  const baseMs = useMemo(() => {
-    const t = viewNow.getTime();
-    return t - (t % HOUR_MS) + START_OFFSET * HOUR_MS;
-  }, [viewNow]);
-
-  // Column index of the current real hour. Null when real-now is outside
-  // the visible window (e.g. user paged forward to a future day).
-  const nowIdx = useMemo(() => {
-    const delta = realNow.getTime() - baseMs;
-    if (delta < 0 || delta >= HOURS_WINDOW * HOUR_MS) return null;
-    return Math.floor(delta / HOUR_MS);
-  }, [realNow, baseMs]);
 
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
@@ -115,15 +96,13 @@ function AppInner() {
   const openDatePicker = () => {
     const el = dateInputRef.current;
     if (!el) return;
-    // showPicker is the modern API (Chrome/Edge/Safari 16.4+). Fallback to
-    // programmatic click, which opens the native picker on older Safari.
     try {
       if (typeof el.showPicker === "function") {
         el.showPicker();
         return;
       }
     } catch {
-      /* fall through */
+      /* fall through to click */
     }
     el.click();
     el.focus();
@@ -212,7 +191,7 @@ function AppInner() {
         {!hydrated ? null : cities.length === 0 ? (
           <EmptyState onAdd={() => setAddOpen(true)} />
         ) : (
-          <div ref={listRef} className="relative">
+          <div className="relative">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -228,11 +207,13 @@ function AppInner() {
                     city={city}
                     isHome={city.id === homeId}
                     homeTz={homeTz}
-                    now={viewNow}
+                    now={realNow}
+                    referenceNow={referenceNow}
                     startOffsetHours={START_OFFSET}
                     hours={HOURS_WINDOW}
                     colWidth={COL_WIDTH}
                     compact={viewMode === "list"}
+                    activeIdx={activeIdx}
                     onCellTap={(i) =>
                       setActiveIdx((cur) => (cur === i ? null : i))
                     }
@@ -242,14 +223,6 @@ function AppInner() {
                 ))}
               </SortableContext>
             </DndContext>
-            {viewMode === "bars" && (
-              <TimeColumnOverlay
-                nowIdx={nowIdx}
-                activeIdx={activeIdx}
-                colWidth={COL_WIDTH}
-                hours={HOURS_WINDOW}
-              />
-            )}
           </div>
         )}
       </main>

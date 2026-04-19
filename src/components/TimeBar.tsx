@@ -8,22 +8,33 @@ const HOUR_MS = 60 * 60 * 1000;
 type Props = {
   timezone: string;
   now: Date;
+  /** `startOffsetHours` is measured against the reference instant used by the
+   *  owning page (usually `viewNow`). */
+  referenceNow: Date;
   startOffsetHours: number;
   hours: number;
   colWidth?: number;
+  /** Index of the column the user tapped; every bar highlights the same
+   *  column so the selection reads vertically across all cities. */
+  activeIdx?: number | null;
   onCellTap?: (idx: number) => void;
 };
 
 export function TimeBar({
   timezone,
   now,
+  referenceNow,
   startOffsetHours,
   hours,
   colWidth = 52,
+  activeIdx = null,
   onCellTap,
 }: Props) {
+  // Align to whole hours so every column lands on :00.
   const baseMs =
-    now.getTime() + startOffsetHours * HOUR_MS - (now.getTime() % HOUR_MS);
+    referenceNow.getTime() +
+    startOffsetHours * HOUR_MS -
+    (referenceNow.getTime() % HOUR_MS);
 
   const cells = Array.from({ length: hours }, (_, i) => {
     const t = new Date(baseMs + i * HOUR_MS);
@@ -31,7 +42,11 @@ export function TimeBar({
     return { t, parts };
   });
 
-  const nowIdx = Math.floor((now.getTime() - baseMs) / HOUR_MS);
+  // Column of the wall-clock "now" — may be null when we're previewing a
+  // future day (the window no longer contains the present moment).
+  const delta = now.getTime() - baseMs;
+  const nowIdx =
+    delta >= 0 && delta < hours * HOUR_MS ? Math.floor(delta / HOUR_MS) : -1;
 
   return (
     <div
@@ -42,6 +57,7 @@ export function TimeBar({
         const tier = hourTier(c.parts.hour24);
         const isMidnight = c.parts.hour24 === 0;
         const isNow = i === nowIdx;
+        const isActive = activeIdx === i;
         const night = tier === "night";
         return (
           <button
@@ -52,7 +68,9 @@ export function TimeBar({
               "tz-cell relative flex-none flex items-center justify-center",
               tier === "day" && "bg-[var(--day-tint)]",
               tier === "evening" && "bg-[var(--evening-tint)]",
-              night && "bg-[var(--night-tint)]"
+              night && "bg-[var(--night-tint)]",
+              isNow && !isActive && "tz-cell-now",
+              isActive && "tz-cell-active"
             )}
             style={{ width: colWidth }}
             aria-label={`${c.parts.hour12}${c.parts.ampm} ${c.parts.month} ${c.parts.day}`}

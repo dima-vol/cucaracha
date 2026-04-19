@@ -12,9 +12,6 @@
   --evening-tint: #dbe3ef;
   --night-tint: #8aa0bb;
   --daychip: #5e7493;
-  /* Shared horizontal scroll offset for bars; overwritten in realtime by
-     ScrollSyncProvider so the TimeColumnOverlay stays aligned. */
-  --scroll-x: 0px;
 }
 
 @theme inline {
@@ -56,11 +53,25 @@ html, body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* Hour cell with a thin right divider that keeps columns readable. The
-   "now"/"active" column strokes are not per-cell — they live in
-   TimeColumnOverlay as one absolute vertical line per list, so the
-   indicator reads as a single continuous stroke through every city's
-   header instead of a stack of short segments. */
+/* Hour cell with a thin right divider that keeps columns readable. */
 .tz-cell {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Current-hour / tapped-hour indicators are drawn as inset box-shadows on
+   the cell itself, not as a separate overlay layer. This keeps them in
+   the bar's own compositor layer — they scroll natively with the bar,
+   with no per-frame JS or CSS-var repaint in the critical scroll path. */
+.tz-cell-now {
+  box-shadow:
+    inset 0 0 0 1px rgba(100, 116, 139, 0.55),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+.tz-cell-active {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+  box-shadow:
+    inset 0 0 0 1.5px rgb(15, 23, 42),
+    inset -1px 0 0 rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
 }

@@ -9,37 +9,59 @@ import {
   type ReactNode,
 } from "react";
 
+/**
+ * Keeps the horizontal scroll position of every registered bar in lock-step
+ * with whatever bar the user is actively touching, and — after the scroll
+ * settles — gently eases the whole group onto the nearest hour boundary so
+ * the grid always lines up.
+ *
+ * Two deliberate design choices:
+ *
+ * 1. Consumers register via a ref *callback*, not a ref *object*. React
+ *    calls a ref callback on every mount and unmount; a ref object is
+ *    written to silently and never triggers a re-register. That means
+ *    toggling list-view off and back on — which unmounts/remounts the bar
+ *    divs — keeps the scroll group accurate instead of silently losing the
+ *    new bars.
+ *
+ * 2. No overlay or CSS variable shares scroll state with anything outside
+ *    the bars themselves. Current-hour / tapped-hour indicators live as
+ *    box-shadows on the cells, so they're part of the bar's own
+ *    compositor layer and have zero lag relative to the scroll.
+ */
 type Ctx = {
-  registerScroller: (el: HTMLElement) => () => void;
-  registerContainer: (el: HTMLElement | null) => void;
+  register: (el: HTMLElement) => () => void;
 };
 
 const ScrollSyncCtx = createContext<Ctx | null>(null);
 
 type ProviderProps = {
   children: ReactNode;
-  /** If set, the scroll is debounced-snapped to the nearest multiple of
-   *  this pixel value on scroll end. Feels like iOS picker wheels: free
-   *  momentum, then a gentle settle onto the grid. */
+  /** Pixel width of one hour column. If set, we debounce-settle every bar
+   *  onto the nearest multiple of this after the user stops scrolling. */
   snapWidth?: number;
-  /** Debounce in ms before we consider scrolling "ended". */
+  /** How long to wait after the last scroll event before settling. */
   snapIdleMs?: number;
 };
 
 export function ScrollSyncProvider({
   children,
   snapWidth,
-  snapIdleMs = 110,
+  snapIdleMs = 120,
 }: ProviderProps) {
   const nodesRef = useRef<Set<HTMLElement>>(new Set());
-  const containerRef = useRef<HTMLElement | null>(null);
   const applyingRef = useRef(false);
   const idleTimerRef = useRef<number | null>(null);
   const lastSourceRef = useRef<HTMLElement | null>(null);
 
-  const broadcast = useCallback((left: number) => {
-    const c = containerRef.current;
-    if (c) c.style.setProperty("--scroll-x", `${left}px`);
+  const mirror = useCallback((src: HTMLElement, left: number) => {
+    applyingRef.current = true;
+    nodesRef.current.forEach((el) => {
+      if (el !== src && el.scrollLeft !== left) el.scrollLeft = left;
+    });
+    requestAnimationFrame(() => {
+      applyingRef.current = false;
+    });
   }, []);
 
   const scheduleSnap = useCallback(() => {
@@ -47,82 +69,71 @@ export function ScrollSyncProvider({
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => {
       const src = lastSourceRef.current;
-      if (!src) return;
+      if (!src || !src.isConnected) return;
       const raw = src.scrollLeft;
-      const snapped = Math.round(raw / snapWidth) * snapWidth;
-      if (Math.abs(snapped - raw) < 0.5) {
-        // Already on grid — still propagate to be safe.
-        applyingRef.current = true;
-        nodesRef.current.forEach((el) => {
-          if (el !== src) el.scrollLeft = snapped;
-        });
-        broadcast(snapped);
-        requestAnimationFrame(() => {
-          applyingRef.current = false;
-        });
-        return;
-      }
-      // Smooth-ease the source to the nearest hour; mirror that target on
-      // siblings instantly so they stay locked to the source visually even
-      // while it's easing.
+      const target = Math.round(raw / snapWidth) * snapWidth;
+      if (Math.abs(target - raw) < 0.5) return; // already on grid
       applyingRef.current = true;
+      // Ease the source smoothly; mirror the exact target onto the others
+      // so the column strip stays visually locked during the ease.
       try {
-        src.scrollTo({ left: snapped, behavior: "smooth" });
+        src.scrollTo({ left: target, behavior: "smooth" });
       } catch {
-        src.scrollLeft = snapped;
+        src.scrollLeft = target;
       }
       nodesRef.current.forEach((el) => {
         if (el === src) return;
         try {
-          el.scrollTo({ left: snapped, behavior: "smooth" });
+          el.scrollTo({ left: target, behavior: "smooth" });
         } catch {
-          el.scrollLeft = snapped;
+          el.scrollLeft = target;
         }
       });
-      broadcast(snapped);
-      // Release the guard after the smooth animation would have finished
-      // (~300ms is a safe upper bound).
+      // Release the guard after the smooth easing is definitely done.
       window.setTimeout(() => {
         applyingRef.current = false;
       }, 320);
     }, snapIdleMs);
-  }, [snapWidth, snapIdleMs, broadcast]);
+  }, [snapWidth, snapIdleMs]);
 
   const handleScroll = useCallback(
     (e: Event) => {
       if (applyingRef.current) return;
       const src = e.currentTarget as HTMLElement;
-      const left = src.scrollLeft;
       lastSourceRef.current = src;
-      applyingRef.current = true;
-      nodesRef.current.forEach((el) => {
-        if (el !== src) el.scrollLeft = left;
-      });
-      broadcast(left);
-      requestAnimationFrame(() => {
-        applyingRef.current = false;
-      });
+      mirror(src, src.scrollLeft);
       scheduleSnap();
     },
-    [broadcast, scheduleSnap]
+    [mirror, scheduleSnap]
   );
 
-  const registerScroller = useCallback(
+  const register = useCallback(
     (el: HTMLElement) => {
+      if (nodesRef.current.has(el)) {
+        // Defensive: idempotent register.
+        return () => {
+          el.removeEventListener("scroll", handleScroll);
+          nodesRef.current.delete(el);
+          if (lastSourceRef.current === el) lastSourceRef.current = null;
+        };
+      }
+      // When a new bar mounts (e.g. list-view toggled back on), land it at
+      // whatever scrollLeft the live group is using so it slides in at the
+      // same position instead of jumping to 0.
+      const anchor = firstLive(nodesRef.current);
+      if (anchor && anchor.scrollLeft !== el.scrollLeft) {
+        el.scrollLeft = anchor.scrollLeft;
+      }
       nodesRef.current.add(el);
       el.addEventListener("scroll", handleScroll, { passive: true });
       return () => {
         el.removeEventListener("scroll", handleScroll);
         nodesRef.current.delete(el);
+        if (lastSourceRef.current === el) lastSourceRef.current = null;
       };
     },
     [handleScroll]
   );
-
-  const registerContainer = useCallback((el: HTMLElement | null) => {
-    containerRef.current = el;
-    if (el) el.style.setProperty("--scroll-x", "0px");
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -131,28 +142,38 @@ export function ScrollSyncProvider({
   }, []);
 
   return (
-    <ScrollSyncCtx.Provider value={{ registerScroller, registerContainer }}>
+    <ScrollSyncCtx.Provider value={{ register }}>
       {children}
     </ScrollSyncCtx.Provider>
   );
 }
 
-export function useScrollSync(ref: React.RefObject<HTMLElement | null>) {
-  const ctx = useContext(ScrollSyncCtx);
-  useEffect(() => {
-    if (!ctx || !ref.current) return;
-    return ctx.registerScroller(ref.current);
-  }, [ctx, ref]);
-  return ctx;
+function firstLive(set: Set<HTMLElement>): HTMLElement | null {
+  for (const el of set) {
+    if (el.isConnected) return el;
+  }
+  return null;
 }
 
-export function useScrollSyncContainer(
-  ref: React.RefObject<HTMLElement | null>
-) {
+/**
+ * Returns a ref *callback*. Attach it to the scrollable bar div — React
+ * calls it on every mount with the element and on every unmount with
+ * null, which keeps the sync group accurate across list-view toggles,
+ * drag-drop reorders, and anything else that can re-mount the bar.
+ */
+export function useScrollSync() {
   const ctx = useContext(ScrollSyncCtx);
-  useEffect(() => {
-    if (!ctx) return;
-    ctx.registerContainer(ref.current);
-    return () => ctx.registerContainer(null);
-  }, [ctx, ref]);
+  const cleanupRef = useRef<(() => void) | null>(null);
+  return useCallback(
+    (el: HTMLElement | null) => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+      if (el && ctx) {
+        cleanupRef.current = ctx.register(el);
+      }
+    },
+    [ctx]
+  );
 }
