@@ -58,7 +58,7 @@ export function CityRow({
         isHome && "bg-[var(--home-tint)]"
       )}
     >
-      <div className="flex items-center gap-3 px-4 pt-2.5 pb-1.5">
+      <div className="flex items-center gap-3 px-4 pt-1.5 pb-1">
         <button
           type="button"
           onClick={onMakeHome}
@@ -69,32 +69,32 @@ export function CityRow({
           )}
         >
           {isHome ? (
-            <Home size={16} strokeWidth={2.4} fill="currentColor" />
+            <Home size={15} strokeWidth={2.4} fill="currentColor" />
           ) : offsetLabel ? (
             <span className="text-[11px] font-semibold tabular-nums">
               {offsetLabel}
             </span>
           ) : (
-            <Home size={16} strokeWidth={2} />
+            <Home size={15} strokeWidth={2} />
           )}
         </button>
 
         <div className="flex items-baseline gap-1.5 min-w-0 flex-1">
-          <span className="text-[20px] font-medium tracking-tight truncate">
+          <span className="text-[18px] font-medium tracking-tight truncate">
             {city.city}
           </span>
           {abbr && (
-            <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 relative -top-2">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 relative -top-1.5">
               {abbr}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <div className="text-right">
-            <div className="text-[22px] font-medium tabular-nums leading-none">
+            <div className="text-[19px] font-medium tabular-nums leading-none">
               {clock.time}
-              <span className="text-[12px] text-slate-400 ml-0.5">
+              <span className="text-[11px] text-slate-400 ml-0.5">
                 {clock.ampm}
               </span>
             </div>
@@ -103,18 +103,18 @@ export function CityRow({
             type="button"
             onClick={onRemove}
             aria-label="Remove city"
-            className="w-7 h-7 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
+            className="w-6 h-6 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"
           >
-            <X size={16} />
+            <X size={14} />
           </button>
           <button
             type="button"
             aria-label="Reorder"
-            className="w-7 h-7 rounded-md text-slate-300 hover:text-slate-700 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
+            className="w-6 h-6 rounded-md text-slate-300 hover:text-slate-700 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
             {...attributes}
             {...listeners}
           >
-            <GripVertical size={18} />
+            <GripVertical size={16} />
           </button>
         </div>
       </div>

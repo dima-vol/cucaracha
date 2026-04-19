@@ -15,7 +15,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Plus } from "lucide-react";
+import { CalendarDays, List, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { CityRow } from "@/components/CityRow";
 import { AddCitySheet } from "@/components/AddCitySheet";
@@ -24,12 +24,14 @@ import {
   useScrollSyncContainer,
 } from "@/components/ScrollSync";
 import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
+import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
 
-const HOURS_WINDOW = 36;          // total hour columns rendered
-const START_OFFSET = -6;          // start 6h before "now"
+const HOURS_WINDOW = 36;
+const START_OFFSET = -6;
 const COL_WIDTH = 52;
 const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 export default function AppPage() {
   return (
@@ -42,15 +44,17 @@ export default function AppPage() {
 function AppInner() {
   const { cities, homeId, hydrated, addCity, removeCity, makeHome, reorder } =
     useCities();
-  const [now, setNow] = useState<Date>(() => new Date());
+  const [realNow, setRealNow] = useState<Date>(() => new Date());
+  const [dayOffset, setDayOffset] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
   useScrollSyncContainer(listRef);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
+    const id = setInterval(() => setRealNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
 
@@ -64,13 +68,26 @@ function AppInner() {
     return home?.timezone ?? "UTC";
   }, [cities, homeId]);
 
-  // Absolute-time column index of the current moment, shared across all
-  // cities (their local hours differ but the instant is the same).
-  const nowIdx = useMemo(() => {
-    const baseMs =
-      now.getTime() + START_OFFSET * HOUR_MS - (now.getTime() % HOUR_MS);
-    return Math.floor((now.getTime() - baseMs) / HOUR_MS);
-  }, [now]);
+  // The "view" instant: same wall-clock time as real now, on the selected
+  // day. Bars compute their hour cells against this.
+  const viewNow = useMemo(() => {
+    if (dayOffset === 0) return realNow;
+    return new Date(realNow.getTime() + dayOffset * DAY_MS);
+  }, [realNow, dayOffset]);
+
+  // Window base (whole hour, START_OFFSET hours before viewNow).
+  const baseMs = useMemo(() => {
+    const t = viewNow.getTime();
+    return t - (t % HOUR_MS) + START_OFFSET * HOUR_MS;
+  }, [viewNow]);
+
+  // Pixel position of *real* now relative to the visible window. Hidden when
+  // outside (e.g. when user has paged forward to a future day).
+  const nowOffsetPx = useMemo(() => {
+    const delta = realNow.getTime() - baseMs;
+    if (delta < 0 || delta > HOURS_WINDOW * HOUR_MS) return null;
+    return (delta / HOUR_MS) * COL_WIDTH;
+  }, [realNow, baseMs]);
 
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
@@ -78,25 +95,66 @@ function AppInner() {
     reorder(String(active.id), String(over.id));
   };
 
+  const onPickDate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (!value) return;
+    const picked = new Date(value + "T00:00:00");
+    const today = new Date(realNow);
+    today.setHours(0, 0, 0, 0);
+    const offset = Math.round((picked.getTime() - today.getTime()) / DAY_MS);
+    setDayOffset(offset);
+  };
+
   return (
     <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
-      <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[var(--border)] px-4 h-14 flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
-          <span className="text-[17px] font-semibold tracking-tight">
-            Cucaracha
-          </span>
-          <span className="text-[11px] uppercase tracking-[0.14em] text-slate-400">
-            Time Zones
-          </span>
+      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[var(--border)]">
+        <div className="px-4 h-12 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => dateInputRef.current?.showPicker?.()}
+            aria-label="Jump to date"
+            className="w-9 h-9 -ml-1 rounded-full text-slate-500 hover:bg-slate-50 flex items-center justify-center"
+          >
+            <CalendarDays size={18} strokeWidth={1.8} />
+          </button>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[15px] font-semibold tracking-tight">
+              Cucaracha
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.14em] text-slate-400">
+              Time Zones
+            </span>
+          </div>
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              aria-label="List view"
+              className="w-9 h-9 rounded-full text-slate-500 hover:bg-slate-50 flex items-center justify-center"
+            >
+              <List size={18} strokeWidth={1.8} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setAddOpen(true)}
+              className="w-9 h-9 rounded-full text-slate-700 hover:bg-slate-50 flex items-center justify-center"
+              aria-label="Add city"
+            >
+              <Plus size={20} strokeWidth={2} />
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          className="w-9 h-9 rounded-full border border-[var(--border)] hover:bg-slate-50 flex items-center justify-center"
-          aria-label="Add city"
-        >
-          <Plus size={18} strokeWidth={2.2} />
-        </button>
+        <DateStrip
+          realNow={realNow}
+          dayOffset={dayOffset}
+          onSelect={setDayOffset}
+        />
+        <input
+          ref={dateInputRef}
+          type="date"
+          className="sr-only"
+          tabIndex={-1}
+          onChange={onPickDate}
+        />
       </header>
 
       <InstallHint />
@@ -121,7 +179,7 @@ function AppInner() {
                     city={city}
                     isHome={city.id === homeId}
                     homeTz={homeTz}
-                    now={now}
+                    now={viewNow}
                     startOffsetHours={START_OFFSET}
                     hours={HOURS_WINDOW}
                     colWidth={COL_WIDTH}
@@ -135,7 +193,7 @@ function AppInner() {
               </SortableContext>
             </DndContext>
             <TimeColumnOverlay
-              nowIdx={nowIdx}
+              nowOffsetPx={nowOffsetPx}
               activeIdx={activeIdx}
               colWidth={COL_WIDTH}
               hours={HOURS_WINDOW}
