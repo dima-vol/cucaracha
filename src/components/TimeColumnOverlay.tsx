@@ -2,10 +2,10 @@
 
 /**
  * Vertical indicators that span the entire city list:
- *   - "now": a single 1-px hairline placed with minute precision (not snapped
- *     to an hour cell). Subtle neutral colour — meant to be a hint, not a
- *     CTA.
- *   - "active": a 4-sided rectangle outline around the column the user
+ *   - "now": a thin rectangle outline around the current hour cell.
+ *     Snapped to the hour grid and drawn in a subtle neutral tone —
+ *     meant to be a reference, not a CTA.
+ *   - "active": a bolder rectangle outline around the column the user
  *     tapped. Drawn on top of "now" so the selection always reads first.
  *
  * Both live as a single absolutely-positioned layer at the list level so the
@@ -14,9 +14,9 @@
  * sync with the bars.
  */
 type Props = {
-  /** Pixel offset of the current real moment from the start of the bar.
-   *  Sub-cell precision (i.e. accounts for minutes within the hour). */
-  nowOffsetPx: number | null;
+  /** Index of the current real hour within the bar (0..hours-1), or null
+   *  if real-now is outside the visible window. */
+  nowIdx: number | null;
   /** Index of a tapped column (0..hours-1), or null. */
   activeIdx: number | null;
   colWidth: number;
@@ -24,14 +24,13 @@ type Props = {
 };
 
 export function TimeColumnOverlay({
-  nowOffsetPx,
+  nowIdx,
   activeIdx,
   colWidth,
   hours,
 }: Props) {
   const totalWidth = hours * colWidth;
-  const showNow =
-    nowOffsetPx != null && nowOffsetPx >= 0 && nowOffsetPx <= totalWidth;
+  const showNow = nowIdx != null && nowIdx >= 0 && nowIdx < hours;
   const showActive =
     activeIdx != null && activeIdx >= 0 && activeIdx < hours;
 
@@ -50,8 +49,8 @@ export function TimeColumnOverlay({
       >
         {showNow && (
           <span
-            className="absolute inset-y-0 bg-slate-900/35"
-            style={{ left: nowOffsetPx - 0.5, width: 1 }}
+            className="absolute inset-y-0 border border-slate-500/60 rounded-[3px]"
+            style={{ left: nowIdx * colWidth, width: colWidth }}
           />
         )}
         {showActive && (

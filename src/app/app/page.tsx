@@ -81,12 +81,12 @@ function AppInner() {
     return t - (t % HOUR_MS) + START_OFFSET * HOUR_MS;
   }, [viewNow]);
 
-  // Pixel position of *real* now relative to the visible window. Hidden when
-  // outside (e.g. when user has paged forward to a future day).
-  const nowOffsetPx = useMemo(() => {
+  // Column index of the current real hour within the visible window.
+  // Hidden when outside (e.g. when user has paged forward to a future day).
+  const nowIdx = useMemo(() => {
     const delta = realNow.getTime() - baseMs;
-    if (delta < 0 || delta > HOURS_WINDOW * HOUR_MS) return null;
-    return (delta / HOUR_MS) * COL_WIDTH;
+    if (delta < 0 || delta >= HOURS_WINDOW * HOUR_MS) return null;
+    return Math.floor(delta / HOUR_MS);
   }, [realNow, baseMs]);
 
   const handleDragEnd = (e: DragEndEvent) => {
@@ -193,7 +193,7 @@ function AppInner() {
               </SortableContext>
             </DndContext>
             <TimeColumnOverlay
-              nowOffsetPx={nowOffsetPx}
+              nowIdx={nowIdx}
               activeIdx={activeIdx}
               colWidth={COL_WIDTH}
               hours={HOURS_WINDOW}
