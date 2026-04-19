@@ -15,7 +15,7 @@ type Props = {
   hours: number;
   /** Column width in px */
   colWidth?: number;
-  /** Active/selected column index, highlights a cell across all rows */
+  /** Active/selected column index, highlights a column across all rows */
   activeIdx?: number | null;
   onCellTap?: (idx: number) => void;
 };
@@ -29,8 +29,7 @@ export function TimeBar({
   activeIdx = null,
   onCellTap,
 }: Props) {
-  // Align the reference start to a whole hour in the city's local time so that
-  // every column lands on ":00" exactly.
+  // Align the reference start to a whole hour so every column lands on :00.
   const baseMs =
     now.getTime() + startOffsetHours * HOUR_MS - (now.getTime() % HOUR_MS);
 
@@ -40,13 +39,12 @@ export function TimeBar({
     return { t, parts };
   });
 
-  // "Now" indicator: which cell contains the current moment?
   const nowIdx = Math.floor((now.getTime() - baseMs) / HOUR_MS);
 
   return (
     <div
       className="flex items-stretch select-none"
-      style={{ width: hours * colWidth }}
+      style={{ width: hours * colWidth, height: 52 }}
     >
       {cells.map((c, i) => {
         const tier = hourTier(c.parts.hour24);
@@ -58,15 +56,15 @@ export function TimeBar({
             key={i}
             type="button"
             onClick={() => onCellTap?.(i)}
+            data-now={isNow || undefined}
+            data-active={isActive || undefined}
             className={cn(
-              "relative flex-none flex flex-col items-center justify-center border-r border-black/5 last:border-r-0 transition-colors",
+              "tz-cell relative flex-none flex flex-col items-center justify-center transition-colors",
               tier === "day" && "bg-[var(--day-tint)]",
               tier === "evening" && "bg-[var(--evening-tint)]",
-              tier === "night" && "bg-[var(--night-tint)]",
-              isActive && "ring-2 ring-inset ring-black/70 z-10",
-              isNow && !isActive && "ring-1 ring-inset ring-[var(--accent)]/70"
+              tier === "night" && "bg-[var(--night-tint)]"
             )}
-            style={{ width: colWidth, height: 52 }}
+            style={{ width: colWidth }}
             aria-label={`${c.parts.hour12}${c.parts.ampm} ${c.parts.month} ${c.parts.day}`}
           >
             {isMidnight ? (

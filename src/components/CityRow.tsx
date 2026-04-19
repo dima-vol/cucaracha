@@ -56,11 +56,11 @@ export function CityRow({
         opacity: isDragging ? 0.7 : 1,
       }}
       className={cn(
-        "group border-b border-[var(--border)] px-4 py-3",
+        "group",
         isHome && "bg-[var(--home-tint)]"
       )}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-4 pt-2.5 pb-1.5">
         <button
           type="button"
           onClick={onMakeHome}
@@ -121,10 +121,7 @@ export function CityRow({
         </div>
       </div>
 
-      <div
-        ref={barScrollRef}
-        className="mt-2 overflow-x-auto no-scrollbar -mx-1 px-1"
-      >
+      <div ref={barScrollRef} className="overflow-x-auto no-scrollbar">
         <TimeBar
           timezone={city.timezone}
           now={now}
