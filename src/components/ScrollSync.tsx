@@ -10,33 +10,43 @@ import {
 } from "react";
 
 type Ctx = {
-  register: (el: HTMLElement) => () => void;
+  /** Register a scrollable bar so horizontal scroll mirrors across all bars. */
+  registerScroller: (el: HTMLElement) => () => void;
+  /** Register the list container that should receive the `--scroll-x` CSS
+   *  variable on every scroll tick. Overlays read that var to track the bars. */
+  registerContainer: (el: HTMLElement | null) => void;
 };
 
 const ScrollSyncCtx = createContext<Ctx | null>(null);
 
 export function ScrollSyncProvider({ children }: { children: ReactNode }) {
-  // A Set of scroll containers that should share a scrollLeft. The ref holds
-  // a long-lived collection — we only mutate the DOM elements in it, not the
-  // set identity — so React fast-refresh is happy.
   const nodesRef = useRef<Set<HTMLElement>>(new Set());
+  const containerRef = useRef<HTMLElement | null>(null);
   const applyingRef = useRef(false);
 
-  const handleScroll = useCallback((e: Event) => {
-    if (applyingRef.current) return;
-    const src = e.currentTarget as HTMLElement;
-    const left = src.scrollLeft;
-    applyingRef.current = true;
-    const nodes = nodesRef.current;
-    nodes.forEach((el) => {
-      if (el !== src) el.scrollLeft = left;
-    });
-    requestAnimationFrame(() => {
-      applyingRef.current = false;
-    });
+  const broadcast = useCallback((left: number) => {
+    const c = containerRef.current;
+    if (c) c.style.setProperty("--scroll-x", `${left}px`);
   }, []);
 
-  const register = useCallback(
+  const handleScroll = useCallback(
+    (e: Event) => {
+      if (applyingRef.current) return;
+      const src = e.currentTarget as HTMLElement;
+      const left = src.scrollLeft;
+      applyingRef.current = true;
+      nodesRef.current.forEach((el) => {
+        if (el !== src) el.scrollLeft = left;
+      });
+      broadcast(left);
+      requestAnimationFrame(() => {
+        applyingRef.current = false;
+      });
+    },
+    [broadcast]
+  );
+
+  const registerScroller = useCallback(
     (el: HTMLElement) => {
       nodesRef.current.add(el);
       el.addEventListener("scroll", handleScroll, { passive: true });
@@ -48,8 +58,13 @@ export function ScrollSyncProvider({ children }: { children: ReactNode }) {
     [handleScroll]
   );
 
+  const registerContainer = useCallback((el: HTMLElement | null) => {
+    containerRef.current = el;
+    if (el) el.style.setProperty("--scroll-x", "0px");
+  }, []);
+
   return (
-    <ScrollSyncCtx.Provider value={{ register }}>
+    <ScrollSyncCtx.Provider value={{ registerScroller, registerContainer }}>
       {children}
     </ScrollSyncCtx.Provider>
   );
@@ -59,7 +74,18 @@ export function useScrollSync(ref: React.RefObject<HTMLElement | null>) {
   const ctx = useContext(ScrollSyncCtx);
   useEffect(() => {
     if (!ctx || !ref.current) return;
-    return ctx.register(ref.current);
+    return ctx.registerScroller(ref.current);
   }, [ctx, ref]);
   return ctx;
+}
+
+export function useScrollSyncContainer(
+  ref: React.RefObject<HTMLElement | null>
+) {
+  const ctx = useContext(ScrollSyncCtx);
+  useEffect(() => {
+    if (!ctx) return;
+    ctx.registerContainer(ref.current);
+    return () => ctx.registerContainer(null);
+  }, [ctx, ref]);
 }

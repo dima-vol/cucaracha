@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -19,19 +19,35 @@ import { Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { CityRow } from "@/components/CityRow";
 import { AddCitySheet } from "@/components/AddCitySheet";
-import { ScrollSyncProvider } from "@/components/ScrollSync";
+import {
+  ScrollSyncProvider,
+  useScrollSyncContainer,
+} from "@/components/ScrollSync";
+import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
 import { InstallHint } from "@/components/InstallHint";
 
 const HOURS_WINDOW = 36;          // total hour columns rendered
 const START_OFFSET = -6;          // start 6h before "now"
 const COL_WIDTH = 52;
+const HOUR_MS = 60 * 60 * 1000;
 
 export default function AppPage() {
+  return (
+    <ScrollSyncProvider>
+      <AppInner />
+    </ScrollSyncProvider>
+  );
+}
+
+function AppInner() {
   const { cities, homeId, hydrated, addCity, removeCity, makeHome, reorder } =
     useCities();
   const [now, setNow] = useState<Date>(() => new Date());
   const [addOpen, setAddOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+
+  const listRef = useRef<HTMLDivElement>(null);
+  useScrollSyncContainer(listRef);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -48,6 +64,14 @@ export default function AppPage() {
     return home?.timezone ?? "UTC";
   }, [cities, homeId]);
 
+  // Absolute-time column index of the current moment, shared across all
+  // cities (their local hours differ but the instant is the same).
+  const nowIdx = useMemo(() => {
+    const baseMs =
+      now.getTime() + START_OFFSET * HOUR_MS - (now.getTime() % HOUR_MS);
+    return Math.floor((now.getTime() - baseMs) / HOUR_MS);
+  }, [now]);
+
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
@@ -55,33 +79,33 @@ export default function AppPage() {
   };
 
   return (
-    <ScrollSyncProvider>
-      <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
-        <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[var(--border)] px-4 h-14 flex items-center justify-between">
-          <div className="flex items-baseline gap-2">
-            <span className="text-[17px] font-semibold tracking-tight">
-              Cucaracha
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.14em] text-slate-400">
-              Time Zones
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAddOpen(true)}
-            className="w-9 h-9 rounded-full border border-[var(--border)] hover:bg-slate-50 flex items-center justify-center"
-            aria-label="Add city"
-          >
-            <Plus size={18} strokeWidth={2.2} />
-          </button>
-        </header>
+    <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
+      <header className="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-[var(--border)] px-4 h-14 flex items-center justify-between">
+        <div className="flex items-baseline gap-2">
+          <span className="text-[17px] font-semibold tracking-tight">
+            Cucaracha
+          </span>
+          <span className="text-[11px] uppercase tracking-[0.14em] text-slate-400">
+            Time Zones
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          className="w-9 h-9 rounded-full border border-[var(--border)] hover:bg-slate-50 flex items-center justify-center"
+          aria-label="Add city"
+        >
+          <Plus size={18} strokeWidth={2.2} />
+        </button>
+      </header>
 
-        <InstallHint />
+      <InstallHint />
 
-        <main className="flex-1">
-          {!hydrated ? null : cities.length === 0 ? (
-            <EmptyState onAdd={() => setAddOpen(true)} />
-          ) : (
+      <main className="flex-1">
+        {!hydrated ? null : cities.length === 0 ? (
+          <EmptyState onAdd={() => setAddOpen(true)} />
+        ) : (
+          <div ref={listRef} className="relative">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -101,7 +125,6 @@ export default function AppPage() {
                     startOffsetHours={START_OFFSET}
                     hours={HOURS_WINDOW}
                     colWidth={COL_WIDTH}
-                    activeIdx={activeIdx}
                     onCellTap={(i) =>
                       setActiveIdx((cur) => (cur === i ? null : i))
                     }
@@ -111,16 +134,22 @@ export default function AppPage() {
                 ))}
               </SortableContext>
             </DndContext>
-          )}
-        </main>
+            <TimeColumnOverlay
+              nowIdx={nowIdx}
+              activeIdx={activeIdx}
+              colWidth={COL_WIDTH}
+              hours={HOURS_WINDOW}
+            />
+          </div>
+        )}
+      </main>
 
-        <AddCitySheet
-          open={addOpen}
-          onClose={() => setAddOpen(false)}
-          onPick={(c) => addCity(c)}
-        />
-      </div>
-    </ScrollSyncProvider>
+      <AddCitySheet
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onPick={(c) => addCity(c)}
+      />
+    </div>
   );
 }
 

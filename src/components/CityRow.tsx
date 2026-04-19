@@ -18,7 +18,6 @@ type Props = {
   startOffsetHours: number;
   hours: number;
   colWidth: number;
-  activeIdx: number | null;
   onCellTap: (idx: number) => void;
   onRemove: () => void;
   onMakeHome: () => void;
@@ -32,7 +31,6 @@ export function CityRow({
   startOffsetHours,
   hours,
   colWidth,
-  activeIdx,
   onCellTap,
   onRemove,
   onMakeHome,
@@ -128,7 +126,6 @@ export function CityRow({
           startOffsetHours={startOffsetHours}
           hours={hours}
           colWidth={colWidth}
-          activeIdx={activeIdx}
           onCellTap={onCellTap}
         />
       </div>

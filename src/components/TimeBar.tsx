@@ -15,8 +15,6 @@ type Props = {
   hours: number;
   /** Column width in px */
   colWidth?: number;
-  /** Active/selected column index, highlights a column across all rows */
-  activeIdx?: number | null;
   onCellTap?: (idx: number) => void;
 };
 
@@ -26,7 +24,6 @@ export function TimeBar({
   startOffsetHours,
   hours,
   colWidth = 52,
-  activeIdx = null,
   onCellTap,
 }: Props) {
   // Align the reference start to a whole hour so every column lands on :00.
@@ -50,14 +47,11 @@ export function TimeBar({
         const tier = hourTier(c.parts.hour24);
         const isMidnight = c.parts.hour24 === 0;
         const isNow = i === nowIdx;
-        const isActive = activeIdx === i;
         return (
           <button
             key={i}
             type="button"
             onClick={() => onCellTap?.(i)}
-            data-now={isNow || undefined}
-            data-active={isActive || undefined}
             className={cn(
               "tz-cell relative flex-none flex flex-col items-center justify-center transition-colors",
               tier === "day" && "bg-[var(--day-tint)]",
@@ -66,6 +60,7 @@ export function TimeBar({
             )}
             style={{ width: colWidth }}
             aria-label={`${c.parts.hour12}${c.parts.ampm} ${c.parts.month} ${c.parts.day}`}
+            aria-current={isNow ? "time" : undefined}
           >
             {isMidnight ? (
               <span className="flex flex-col items-center leading-tight">

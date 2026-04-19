@@ -48,28 +48,11 @@ body {
   overscroll-behavior-y: contain;
 }
 
-/* ----- Time bar grid ---------------------------------------------------- */
-/* One hour cell. Thin right divider so columns align as a single grid.    */
-/* "Now" and "active" are drawn as inset left+right shadows so adjacent    */
-/* rows stack into one continuous vertical column across all cities.       */
+/* Hour cell with a thin right divider that keeps columns readable. The
+   "now"/"active" column strokes are not per-cell — they live in
+   TimeColumnOverlay as one absolute vertical line per list, so the
+   indicator reads as a single continuous stroke through every city's
+   header instead of a stack of short segments. */
 .tz-cell {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
-}
-.tz-cell[data-now] {
-  box-shadow:
-    inset 2px 0 0 var(--accent),
-    inset -2px 0 0 var(--accent);
-  z-index: 1;
-}
-.tz-cell[data-active] {
-  box-shadow:
-    inset 2px 0 0 rgba(15, 23, 42, 0.85),
-    inset -2px 0 0 rgba(15, 23, 42, 0.85);
-  z-index: 2;
-}
-.tz-cell[data-now][data-active] {
-  box-shadow:
-    inset 2px 0 0 rgba(15, 23, 42, 0.85),
-    inset -2px 0 0 rgba(15, 23, 42, 0.85);
-  z-index: 2;
 }
