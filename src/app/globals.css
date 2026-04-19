@@ -40,13 +40,11 @@ html, body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
-/* Snap horizontal scroll to hour columns — each .tz-cell is a snap point,
-   so scrolling always lands on a clean hour boundary (no half-cells, no
-   drift). `scroll-behavior: auto` disables smooth-scroll animations so
-   programmatic sync between bars doesn't add visible easing. */
+/* Hour-bar scroll: native momentum on iOS, no CSS snap. Final alignment
+   to the nearest hour is done in JS (ScrollSyncProvider) on scroll end,
+   so fast flicks aren't blocked and programmatic sync between bars
+   doesn't fight CSS snap. */
 .snap-hours {
-  scroll-snap-type: x mandatory;
-  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -62,10 +60,7 @@ html, body {
    "now"/"active" column strokes are not per-cell — they live in
    TimeColumnOverlay as one absolute vertical line per list, so the
    indicator reads as a single continuous stroke through every city's
-   header instead of a stack of short segments. Each cell is also a snap
-   point for the horizontal scroll. */
+   header instead of a stack of short segments. */
 .tz-cell {
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }

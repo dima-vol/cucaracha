@@ -38,7 +38,7 @@ type ViewMode = "bars" | "list";
 
 export default function AppPage() {
   return (
-    <ScrollSyncProvider>
+    <ScrollSyncProvider snapWidth={COL_WIDTH}>
       <AppInner />
     </ScrollSyncProvider>
   );
