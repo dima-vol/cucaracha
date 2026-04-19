@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/cn";
 
 const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -26,12 +26,24 @@ export function DateStrip({
   back = 1,
   forward = 13,
 }: Props) {
-  const days = Array.from({ length: back + forward + 1 }, (_, i) => {
-    const offset = i - back;
-    const d = new Date(realNow);
-    d.setDate(d.getDate() + offset);
-    return { offset, date: d };
-  });
+  // Rebuild the strip only when the calendar date changes, not on every
+  // minute tick — `realNow` updates frequently but the strip is identical
+  // for the whole day.
+  const todayKey =
+    realNow.getFullYear() * 10000 +
+    (realNow.getMonth() + 1) * 100 +
+    realNow.getDate();
+  const days = useMemo(
+    () =>
+      Array.from({ length: back + forward + 1 }, (_, i) => {
+        const offset = i - back;
+        const d = new Date(realNow);
+        d.setDate(d.getDate() + offset);
+        return { offset, date: d };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rebuilt per calendar day
+    [todayKey, back, forward]
+  );
 
   const selectedRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {

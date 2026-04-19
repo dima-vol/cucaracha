@@ -18,6 +18,8 @@ type Props = {
   startOffsetHours: number;
   hours: number;
   colWidth: number;
+  /** If true, hide the hour bar and show only the summary row. */
+  compact: boolean;
   onCellTap: (idx: number) => void;
   onRemove: () => void;
   onMakeHome: () => void;
@@ -31,6 +33,7 @@ export function CityRow({
   startOffsetHours,
   hours,
   colWidth,
+  compact,
   onCellTap,
   onRemove,
   onMakeHome,
@@ -53,10 +56,7 @@ export function CityRow({
         transition,
         opacity: isDragging ? 0.7 : 1,
       }}
-      className={cn(
-        "group",
-        isHome && "bg-[var(--home-tint)]"
-      )}
+      className={cn("group", isHome && "bg-[var(--home-tint)]")}
     >
       <div className="flex items-center gap-3 px-4 pt-1.5 pb-1">
         <button
@@ -84,15 +84,15 @@ export function CityRow({
             {city.city}
           </span>
           {abbr && (
-            <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 relative -top-1.5">
+            <span className="flex-none text-[10px] font-medium uppercase tracking-wider text-slate-400 relative -top-1.5">
               {abbr}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex-none flex items-center gap-1.5">
           <div className="text-right">
-            <div className="text-[19px] font-medium tabular-nums leading-none">
+            <div className="text-[19px] font-medium tabular-nums leading-none whitespace-nowrap">
               {clock.time}
               <span className="text-[11px] text-slate-400 ml-0.5">
                 {clock.ampm}
@@ -119,16 +119,20 @@ export function CityRow({
         </div>
       </div>
 
-      <div ref={barScrollRef} className="overflow-x-auto no-scrollbar">
-        <TimeBar
-          timezone={city.timezone}
-          now={now}
-          startOffsetHours={startOffsetHours}
-          hours={hours}
-          colWidth={colWidth}
-          onCellTap={onCellTap}
-        />
-      </div>
+      {compact ? (
+        <div className="h-1" />
+      ) : (
+        <div ref={barScrollRef} className="overflow-x-auto no-scrollbar">
+          <TimeBar
+            timezone={city.timezone}
+            now={now}
+            startOffsetHours={startOffsetHours}
+            hours={hours}
+            colWidth={colWidth}
+            onCellTap={onCellTap}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CalendarDays, List, Plus } from "lucide-react";
+import { CalendarDays, List, LayoutList, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { CityRow } from "@/components/CityRow";
 import { AddCitySheet } from "@/components/AddCitySheet";
@@ -32,6 +32,9 @@ const START_OFFSET = -6;
 const COL_WIDTH = 52;
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
+const MINUTE_MS = 60 * 1000;
+
+type ViewMode = "bars" | "list";
 
 export default function AppPage() {
   return (
@@ -48,14 +51,24 @@ function AppInner() {
   const [dayOffset, setDayOffset] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("bars");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
   useScrollSyncContainer(listRef);
 
+  // Refresh on every minute boundary so the displayed clocks never lag more
+  // than a few ms behind wall-clock time.
   useEffect(() => {
-    const id = setInterval(() => setRealNow(new Date()), 30_000);
-    return () => clearInterval(id);
+    let timeoutId: number;
+    const tick = () => {
+      setRealNow(new Date());
+      const msUntilNextMinute = MINUTE_MS - (Date.now() % MINUTE_MS);
+      timeoutId = window.setTimeout(tick, msUntilNextMinute);
+    };
+    const msUntilNextMinute = MINUTE_MS - (Date.now() % MINUTE_MS);
+    timeoutId = window.setTimeout(tick, msUntilNextMinute);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const sensors = useSensors(
@@ -68,6 +81,11 @@ function AppInner() {
     return home?.timezone ?? "UTC";
   }, [cities, homeId]);
 
+  const existingIds = useMemo(
+    () => new Set(cities.map((c) => c.id)),
+    [cities]
+  );
+
   // The "view" instant: same wall-clock time as real now, on the selected
   // day. Bars compute their hour cells against this.
   const viewNow = useMemo(() => {
@@ -75,14 +93,13 @@ function AppInner() {
     return new Date(realNow.getTime() + dayOffset * DAY_MS);
   }, [realNow, dayOffset]);
 
-  // Window base (whole hour, START_OFFSET hours before viewNow).
   const baseMs = useMemo(() => {
     const t = viewNow.getTime();
     return t - (t % HOUR_MS) + START_OFFSET * HOUR_MS;
   }, [viewNow]);
 
-  // Column index of the current real hour within the visible window.
-  // Hidden when outside (e.g. when user has paged forward to a future day).
+  // Column index of the current real hour. Null when real-now is outside
+  // the visible window (e.g. user paged forward to a future day).
   const nowIdx = useMemo(() => {
     const delta = realNow.getTime() - baseMs;
     if (delta < 0 || delta >= HOURS_WINDOW * HOUR_MS) return null;
@@ -95,6 +112,23 @@ function AppInner() {
     reorder(String(active.id), String(over.id));
   };
 
+  const openDatePicker = () => {
+    const el = dateInputRef.current;
+    if (!el) return;
+    // showPicker is the modern API (Chrome/Edge/Safari 16.4+). Fallback to
+    // programmatic click, which opens the native picker on older Safari.
+    try {
+      if (typeof el.showPicker === "function") {
+        el.showPicker();
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    el.click();
+    el.focus();
+  };
+
   const onPickDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (!value) return;
@@ -105,13 +139,16 @@ function AppInner() {
     setDayOffset(offset);
   };
 
+  const toggleViewMode = () =>
+    setViewMode((v) => (v === "bars" ? "list" : "bars"));
+
   return (
     <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[var(--border)]">
         <div className="px-4 h-12 flex items-center justify-between">
           <button
             type="button"
-            onClick={() => dateInputRef.current?.showPicker?.()}
+            onClick={openDatePicker}
             aria-label="Jump to date"
             className="w-9 h-9 -ml-1 rounded-full text-slate-500 hover:bg-slate-50 flex items-center justify-center"
           >
@@ -128,10 +165,20 @@ function AppInner() {
           <div className="flex items-center gap-0.5">
             <button
               type="button"
-              aria-label="List view"
+              onClick={toggleViewMode}
+              aria-label={
+                viewMode === "bars"
+                  ? "Switch to list view"
+                  : "Switch to bar view"
+              }
+              aria-pressed={viewMode === "list"}
               className="w-9 h-9 rounded-full text-slate-500 hover:bg-slate-50 flex items-center justify-center"
             >
-              <List size={18} strokeWidth={1.8} />
+              {viewMode === "bars" ? (
+                <List size={18} strokeWidth={1.8} />
+              ) : (
+                <LayoutList size={18} strokeWidth={1.8} />
+              )}
             </button>
             <button
               type="button"
@@ -143,11 +190,13 @@ function AppInner() {
             </button>
           </div>
         </div>
-        <DateStrip
-          realNow={realNow}
-          dayOffset={dayOffset}
-          onSelect={setDayOffset}
-        />
+        {viewMode === "bars" && (
+          <DateStrip
+            realNow={realNow}
+            dayOffset={dayOffset}
+            onSelect={setDayOffset}
+          />
+        )}
         <input
           ref={dateInputRef}
           type="date"
@@ -183,6 +232,7 @@ function AppInner() {
                     startOffsetHours={START_OFFSET}
                     hours={HOURS_WINDOW}
                     colWidth={COL_WIDTH}
+                    compact={viewMode === "list"}
                     onCellTap={(i) =>
                       setActiveIdx((cur) => (cur === i ? null : i))
                     }
@@ -192,12 +242,14 @@ function AppInner() {
                 ))}
               </SortableContext>
             </DndContext>
-            <TimeColumnOverlay
-              nowIdx={nowIdx}
-              activeIdx={activeIdx}
-              colWidth={COL_WIDTH}
-              hours={HOURS_WINDOW}
-            />
+            {viewMode === "bars" && (
+              <TimeColumnOverlay
+                nowIdx={nowIdx}
+                activeIdx={activeIdx}
+                colWidth={COL_WIDTH}
+                hours={HOURS_WINDOW}
+              />
+            )}
           </div>
         )}
       </main>
@@ -206,6 +258,7 @@ function AppInner() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onPick={(c) => addCity(c)}
+        existingIds={existingIds}
       />
     </div>
   );

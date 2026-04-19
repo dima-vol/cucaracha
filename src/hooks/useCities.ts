@@ -70,9 +70,14 @@ export function useCities() {
   const removeCity = useCallback((id: string) => {
     setCities((prev) => {
       const next = prev.filter((c) => c.id !== id);
+      // If we're removing the home city, promote the first remaining city to
+      // home so offset labels and the reference timezone stay coherent.
+      setHomeId((h) => {
+        if (h !== id) return h;
+        return next[0]?.id ?? null;
+      });
       return next;
     });
-    setHomeId((h) => (h === id ? null : h));
   }, []);
 
   const makeHome = useCallback((id: string) => {

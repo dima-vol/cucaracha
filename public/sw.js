@@ -1,6 +1,9 @@
-// Minimal offline-first service worker. Keeps the app usable without network.
-const VERSION = "cucaracha-v1";
-const CORE = [
+// Offline-first service worker. Cache the app shell so it launches without a
+// network, but treat Next.js build assets as immutable (cache-first, safe
+// across redeploys because their filenames are content-hashed).
+
+const VERSION = "cucaracha-v2";
+const SHELL = [
   "/",
   "/app",
   "/manifest.webmanifest",
@@ -12,7 +15,10 @@ const CORE = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(VERSION).then((cache) => cache.addAll(CORE)).catch(() => {})
+    caches
+      .open(VERSION)
+      .then((cache) => cache.addAll(SHELL))
+      .catch(() => {})
   );
   self.skipWaiting();
 });
@@ -35,8 +41,45 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // HTML: network-first, fall back to cache, then to "/app" shell.
-  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
+  // Next.js build output (/_next/static/...) is content-hashed — cache-first
+  // and never revalidate. Safe across redeploys because filenames change.
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      caches.match(req).then((cached) => {
+        if (cached) return cached;
+        return fetch(req).then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, clone)).catch(() => {});
+          }
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // Next.js data / RSC payloads: network-first, fall back to cache.
+  if (url.pathname.startsWith("/_next/")) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, clone)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => caches.match(req).then((c) => c || Response.error()))
+    );
+    return;
+  }
+
+  // HTML navigations: network-first, fall back to cache, then to "/app" shell.
+  if (
+    req.mode === "navigate" ||
+    (req.headers.get("accept") || "").includes("text/html")
+  ) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -52,7 +95,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: cache-first, then update in background.
+  // Everything else (icons, manifest, sw itself, static assets): stale-
+  // while-revalidate.
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req)

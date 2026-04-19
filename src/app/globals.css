@@ -9,9 +9,12 @@
   --accent-soft: #fff7ed;
   --home-tint: #fffbeb;
   --day-tint: #fffdf5;
-  --evening-tint: #e6ecf5;
-  --night-tint: #c9d4e3;
-  --daychip: #94a3b8;
+  --evening-tint: #dbe3ef;
+  --night-tint: #8aa0bb;
+  --daychip: #5e7493;
+  /* Shared horizontal scroll offset for bars; overwritten in realtime by
+     ScrollSyncProvider so the TimeColumnOverlay stays aligned. */
+  --scroll-x: 0px;
 }
 
 @theme inline {
@@ -33,19 +36,16 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-/* iOS PWA: full-bleed safe areas */
-body {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
 /* Hide scrollbars on the time bar while keeping functionality */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
-/* Disable pull-to-refresh inside app shell */
+/* Disable pull-to-refresh inside app shell. Safe-area insets are applied
+   here so the standalone PWA doesn't collide with the iOS notch. */
 .app-shell {
   overscroll-behavior-y: contain;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Hour cell with a thin right divider that keeps columns readable. The
