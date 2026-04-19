@@ -47,11 +47,10 @@ export function ScrollSyncProvider({
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     idleTimerRef.current = window.setTimeout(() => {
       const src = lastSourceRef.current;
-      if (!src) return;
+      if (!src || !src.isConnected) return;
       const raw = src.scrollLeft;
       const snapped = Math.round(raw / snapWidth) * snapWidth;
       if (Math.abs(snapped - raw) < 0.5) {
-        // Already on grid — still propagate to be safe.
         applyingRef.current = true;
         nodesRef.current.forEach((el) => {
           if (el !== src) el.scrollLeft = snapped;
@@ -62,9 +61,6 @@ export function ScrollSyncProvider({
         });
         return;
       }
-      // Smooth-ease the source to the nearest hour; mirror that target on
-      // siblings instantly so they stay locked to the source visually even
-      // while it's easing.
       applyingRef.current = true;
       try {
         src.scrollTo({ left: snapped, behavior: "smooth" });
@@ -80,8 +76,6 @@ export function ScrollSyncProvider({
         }
       });
       broadcast(snapped);
-      // Release the guard after the smooth animation would have finished
-      // (~300ms is a safe upper bound).
       window.setTimeout(() => {
         applyingRef.current = false;
       }, 320);
@@ -109,11 +103,36 @@ export function ScrollSyncProvider({
 
   const registerScroller = useCallback(
     (el: HTMLElement) => {
+      // Idempotent: if this exact element is already registered, return the
+      // existing cleanup. Guards against double-register when a consumer
+      // re-fires the ref callback with the same DOM node.
+      if (nodesRef.current.has(el)) {
+        return () => {
+          el.removeEventListener("scroll", handleScroll);
+          nodesRef.current.delete(el);
+        };
+      }
       nodesRef.current.add(el);
+      // Sync this new node's scrollLeft to the shared --scroll-x so it
+      // immediately matches its siblings (e.g. when a row re-mounts after
+      // a list-view toggle and the others had already scrolled).
+      const c = containerRef.current;
+      if (c) {
+        const raw = getComputedStyle(c).getPropertyValue("--scroll-x");
+        const shared = parseFloat(raw) || 0;
+        if (shared && shared !== el.scrollLeft) {
+          applyingRef.current = true;
+          el.scrollLeft = shared;
+          requestAnimationFrame(() => {
+            applyingRef.current = false;
+          });
+        }
+      }
       el.addEventListener("scroll", handleScroll, { passive: true });
       return () => {
         el.removeEventListener("scroll", handleScroll);
         nodesRef.current.delete(el);
+        if (lastSourceRef.current === el) lastSourceRef.current = null;
       };
     },
     [handleScroll]
@@ -121,7 +140,14 @@ export function ScrollSyncProvider({
 
   const registerContainer = useCallback((el: HTMLElement | null) => {
     containerRef.current = el;
-    if (el) el.style.setProperty("--scroll-x", "0px");
+    if (el) {
+      // Preserve any existing --scroll-x if the container is re-mounting
+      // in an already-scrolled state; default to 0 on a fresh mount.
+      const current = getComputedStyle(el).getPropertyValue("--scroll-x");
+      if (!current || current.trim() === "") {
+        el.style.setProperty("--scroll-x", "0px");
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -137,22 +163,44 @@ export function ScrollSyncProvider({
   );
 }
 
-export function useScrollSync(ref: React.RefObject<HTMLElement | null>) {
+/**
+ * Returns a ref callback to attach to a horizontally scrollable bar. The
+ * callback fires on every mount AND unmount (including re-mounts caused
+ * by toggling list-view mode, drag-drop reorders, or empty-state flips),
+ * so the provider always has an accurate view of the live DOM nodes. The
+ * previous `useRef + useEffect` version only ran on first mount and
+ * silently lost registrations across re-mounts.
+ */
+export function useScrollSync() {
   const ctx = useContext(ScrollSyncCtx);
-  useEffect(() => {
-    if (!ctx || !ref.current) return;
-    return ctx.registerScroller(ref.current);
-  }, [ctx, ref]);
-  return ctx;
+  const cleanupRef = useRef<(() => void) | null>(null);
+  return useCallback(
+    (el: HTMLElement | null) => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+        cleanupRef.current = null;
+      }
+      if (el && ctx) {
+        cleanupRef.current = ctx.registerScroller(el);
+      }
+    },
+    [ctx]
+  );
 }
 
-export function useScrollSyncContainer(
-  ref: React.RefObject<HTMLElement | null>
-) {
+/**
+ * Returns a ref callback to attach to the list container — the element
+ * whose `--scroll-x` CSS variable drives the TimeColumnOverlay. Same
+ * rationale as useScrollSync: a callback ref guarantees we track mount
+ * and unmount, even when the container is rendered conditionally (empty
+ * state, etc.).
+ */
+export function useScrollSyncContainer() {
   const ctx = useContext(ScrollSyncCtx);
-  useEffect(() => {
-    if (!ctx) return;
-    ctx.registerContainer(ref.current);
-    return () => ctx.registerContainer(null);
-  }, [ctx, ref]);
+  return useCallback(
+    (el: HTMLElement | null) => {
+      if (ctx) ctx.registerContainer(el);
+    },
+    [ctx]
+  );
 }

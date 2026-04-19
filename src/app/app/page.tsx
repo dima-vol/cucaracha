@@ -54,8 +54,9 @@ function AppInner() {
   const [viewMode, setViewMode] = useState<ViewMode>("bars");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-  const listRef = useRef<HTMLDivElement>(null);
-  useScrollSyncContainer(listRef);
+  // Callback ref so the container re-registers if the list wrapper ever
+  // unmounts (e.g. flipping to the empty state and back).
+  const setListRef = useScrollSyncContainer();
 
   // Refresh on every minute boundary so the displayed clocks never lag more
   // than a few ms behind wall-clock time.
@@ -212,7 +213,7 @@ function AppInner() {
         {!hydrated ? null : cities.length === 0 ? (
           <EmptyState onAdd={() => setAddOpen(true)} />
         ) : (
-          <div ref={listRef} className="relative">
+          <div ref={setListRef} className="relative">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}

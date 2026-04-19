@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Home, X } from "lucide-react";
@@ -40,8 +39,9 @@ export function CityRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: city.id });
 
-  const barScrollRef = useRef<HTMLDivElement | null>(null);
-  useScrollSync(barScrollRef);
+  // Callback ref — fires on mount AND unmount so the provider re-registers
+  // the bar every time we toggle list-view off and back on.
+  const setBarRef = useScrollSync();
 
   const clock = cityClock(city.timezone, now);
   const abbr = cityTzAbbr(city.timezone, now);
@@ -135,7 +135,7 @@ export function CityRow({
 
       {compact ? null : (
         <div
-          ref={barScrollRef}
+          ref={setBarRef}
           className="overflow-x-auto no-scrollbar snap-hours"
         >
           <TimeBar
