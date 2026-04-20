@@ -77,21 +77,35 @@ export function offsetMinutesBetween(fromTz: string, toTz: string, date: Date): 
   return zoneOffsetMinutes(toTz, date) - zoneOffsetMinutes(fromTz, date);
 }
 
-/** Absolute offset in minutes from UTC for an IANA zone at a given instant. */
+/** Absolute offset in minutes from UTC for an IANA zone at a given instant.
+ *  Works by formatting the instant in the target zone as Y/M/D/h/m/s, then
+ *  reinterpreting those components as UTC — the gap between that virtual
+ *  UTC moment and the real instant is the zone's offset. Relies only on
+ *  numeric Intl output (no locale-sensitive GMT strings), so it's stable
+ *  across browsers and handles DST + fractional offsets automatically. */
 export function zoneOffsetMinutes(tz: string, date: Date): number {
-  const fmt = new Intl.DateTimeFormat("en-US", {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
-    timeZoneName: "longOffset",
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   });
   const parts = fmt.formatToParts(date);
-  const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT";
-  // "GMT+01:00", "GMT-05:30", "GMT"
-  const m = raw.match(/GMT(?:([+-])(\d{1,2})(?::(\d{2}))?)?/);
-  if (!m || !m[1]) return 0;
-  const sign = m[1] === "+" ? 1 : -1;
-  const h = parseInt(m[2] ?? "0", 10);
-  const mm = parseInt(m[3] ?? "0", 10);
-  return sign * (h * 60 + mm);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "0";
+  const y = parseInt(get("year"), 10);
+  const m = parseInt(get("month"), 10);
+  const d = parseInt(get("day"), 10);
+  let h = parseInt(get("hour"), 10);
+  const mm = parseInt(get("minute"), 10);
+  const s = parseInt(get("second"), 10);
+  // Some engines emit "24" for midnight under h23; normalise to 0.
+  if (h === 24) h = 0;
+  const asUtc = Date.UTC(y, m - 1, d, h, mm, s);
+  return Math.round((asUtc - date.getTime()) / 60000);
 }
 
 /** Human-readable offset-from-home indicator like "+4", "-2", or "" if zero. */
