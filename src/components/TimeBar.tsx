@@ -13,9 +13,6 @@ type Props = {
   colWidth?: number;
   activeIdx?: number | null;
   onCellTap?: (idx: number) => void;
-  /** Bubbled up from the row so the row-level drag sensor doesn't
-   *  interpret cell taps as the start of a drag. */
-  onCellPointerDown?: (e: React.PointerEvent) => void;
 };
 
 export function TimeBar({
@@ -26,7 +23,6 @@ export function TimeBar({
   colWidth = 52,
   activeIdx = null,
   onCellTap,
-  onCellPointerDown,
 }: Props) {
   const baseMs =
     referenceNow.getTime() +
@@ -57,7 +53,6 @@ export function TimeBar({
             key={i}
             type="button"
             onClick={() => onCellTap?.(i)}
-            onPointerDown={onCellPointerDown}
             className={cn(
               "tz-cell relative flex-none flex items-center justify-center",
               night && "bg-[var(--night-tint)]",

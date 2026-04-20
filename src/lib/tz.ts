@@ -156,14 +156,39 @@ export function dateDeltaDays(
 }
 
 /** Render a HH:MM am/pm — HH:MM am/pm range in a city's local time. */
-export function cityRange(
-  tz: string,
-  fromMs: number,
-  toMs: number
-): string {
+export function cityRange(tz: string, fromMs: number, toMs: number): string {
   const fmt = (ms: number) => {
     const c = cityClock(tz, new Date(ms));
     return `${c.time}${c.ampm}`;
   };
   return `${fmt(fromMs)} – ${fmt(toMs)}`;
+}
+
+/** Absolute ms of home-local midnight for the day that contains `dayRef`.
+ *  Used to align horizontal scrolling to day boundaries in the home TZ. */
+export function homeTzMidnightMs(homeTz: string, dayRef: Date): number {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: homeTz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = fmt.formatToParts(dayRef);
+  const y = parseInt(parts.find((p) => p.type === "year")!.value, 10);
+  const m = parseInt(parts.find((p) => p.type === "month")!.value, 10);
+  const d = parseInt(parts.find((p) => p.type === "day")!.value, 10);
+  const utcMidnight = Date.UTC(y, m - 1, d);
+  const offsetMin = zoneOffsetMinutes(homeTz, new Date(utcMidnight));
+  return utcMidnight - offsetMin * 60_000;
+}
+
+/** Integer day distance between two YYYYMMDD-style dates. */
+export function dateNumberDiffDays(a: number, b: number): number {
+  const toMs = (n: number) => {
+    const y = Math.floor(n / 10000);
+    const m = Math.floor((n % 10000) / 100);
+    const d = n % 100;
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((toMs(a) - toMs(b)) / 86_400_000);
 }

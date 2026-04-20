@@ -1,8 +1,6 @@
 "use client";
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Home, Trash2 } from "lucide-react";
+import { Home } from "lucide-react";
 import type { CityEntry } from "@/lib/tz";
 import {
   cityClock,
@@ -29,14 +27,8 @@ type Props = {
   selectedRange: SelectedRange;
   activeIdx: number | null;
   onCellTap: (idx: number) => void;
-  onRemove: () => void;
   onMakeHome: () => void;
 };
-
-// Nested interactive elements need to swallow pointer-down so the row's
-// drag sensor doesn't start a drag while the user is just tapping a
-// button. Drag is intentionally activated by long-press on bare row area.
-const stopPointer = (e: React.PointerEvent) => e.stopPropagation();
 
 export function CityRow({
   city,
@@ -51,12 +43,8 @@ export function CityRow({
   selectedRange,
   activeIdx,
   onCellTap,
-  onRemove,
   onMakeHome,
 }: Props) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: city.id });
-
   const abbr = cityTzAbbr(city.timezone, now);
   const offsetLabel = isHome ? "" : offsetFromHomeLabel(homeTz, city.timezone, now);
 
@@ -74,20 +62,11 @@ export function CityRow({
 
   return (
     <div
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.7 : 1,
-        width: compact ? "100%" : hours * colWidth,
-      }}
-      {...attributes}
-      {...listeners}
+      style={{ width: compact ? "100%" : hours * colWidth }}
       className={cn(
         "group relative",
         isHome ? "bg-[var(--home-tint)]" : "bg-white",
-        compact && "border-b border-[var(--border)]",
-        isDragging && "z-20 shadow-lg"
+        compact && "border-b border-[var(--border)]"
       )}
     >
       <div
@@ -100,7 +79,6 @@ export function CityRow({
         <button
           type="button"
           onClick={onMakeHome}
-          onPointerDown={stopPointer}
           aria-label={isHome ? "Home city" : "Make this home"}
           className="flex-none w-7 h-7 -ml-1 rounded-md flex items-center justify-center"
         >
@@ -150,16 +128,6 @@ export function CityRow({
             </span>
           )}
         </div>
-
-        <button
-          type="button"
-          onClick={onRemove}
-          onPointerDown={stopPointer}
-          aria-label="Remove city"
-          className="flex-none w-7 h-7 -mr-1 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"
-        >
-          <Trash2 size={14} strokeWidth={1.8} />
-        </button>
       </div>
 
       {compact ? null : (
@@ -171,7 +139,6 @@ export function CityRow({
           colWidth={colWidth}
           activeIdx={activeIdx}
           onCellTap={onCellTap}
-          onCellPointerDown={stopPointer}
         />
       )}
     </div>

@@ -1,20 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  DndContext,
-  PointerSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { CalendarDays, List, LayoutList, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { CityRow } from "@/components/CityRow";
@@ -22,19 +14,23 @@ import { AddCitySheet } from "@/components/AddCitySheet";
 import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
 import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
+import {
+  cityDateNumber,
+  dateNumberDiffDays,
+  homeTzMidnightMs,
+} from "@/lib/tz";
 
-const HOURS_WINDOW = 36;
-const START_OFFSET = -6;
+const HOURS_WINDOW = 168;      // 7 days of hour cells
+const START_OFFSET = -24;      // window starts 24h before now
 const COL_WIDTH = 52;
 const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
 const MINUTE_MS = 60 * 1000;
 const BAR_TOTAL_WIDTH = HOURS_WINDOW * COL_WIDTH;
 
 type ViewMode = "bars" | "list";
 
 export default function AppPage() {
-  const { cities, homeId, hydrated, addCity, removeCity, makeHome, reorder } =
+  const { cities, homeId, hydrated, addCity, removeCity, makeHome } =
     useCities();
   const [realNow, setRealNow] = useState<Date>(() => new Date());
   const [dayOffset, setDayOffset] = useState(0);
@@ -42,6 +38,8 @@ export default function AppPage() {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("bars");
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const initialScrolledRef = useRef(false);
 
   // Refresh on every minute boundary so city clocks never lag the wall
   // clock by more than a few ms.
@@ -57,16 +55,6 @@ export default function AppPage() {
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  // Long-press to drag — the whole row is a drag target, so quick taps
-  // (hour-cell select, home toggle, delete) must not accidentally start
-  // a drag. 250 ms delay + 5 px tolerance is iOS-reorder territory.
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { delay: 250, tolerance: 5 },
-    }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
   const homeTz = useMemo(() => {
     const home = cities.find((c) => c.id === homeId) ?? cities[0];
     return home?.timezone ?? "UTC";
@@ -77,29 +65,91 @@ export default function AppPage() {
     [cities]
   );
 
-  const referenceNow = useMemo(() => {
-    if (dayOffset === 0) return realNow;
-    return new Date(realNow.getTime() + dayOffset * DAY_MS);
-  }, [realNow, dayOffset]);
+  // Window base: whole-hour floor of now, then START_OFFSET hours back.
+  const baseMs = useMemo(() => {
+    const t = realNow.getTime();
+    return t - (t % HOUR_MS) + START_OFFSET * HOUR_MS;
+  }, [realNow]);
 
+  // Selected hour range comes straight from activeIdx (column index) plus
+  // the bar's baseMs — the same absolute instant in every city.
   const selectedRange = useMemo(() => {
     if (activeIdx == null) return null;
-    const t = referenceNow.getTime();
-    const baseMs = t + START_OFFSET * HOUR_MS - (t % HOUR_MS);
     const fromMs = baseMs + activeIdx * HOUR_MS;
     return { fromMs, toMs: fromMs + HOUR_MS };
-  }, [activeIdx, referenceNow]);
+  }, [activeIdx, baseMs]);
 
-  const handleDragEnd = (e: DragEndEvent) => {
-    const { active, over } = e;
-    if (!over || active.id === over.id) return;
-    reorder(String(active.id), String(over.id));
-  };
+  // Column index of the current real hour within the visible 7-day window.
+  const nowIdx = useMemo(() => {
+    const delta = realNow.getTime() - baseMs;
+    if (delta < 0 || delta >= HOURS_WINDOW * HOUR_MS) return null;
+    return Math.floor(delta / HOUR_MS);
+  }, [realNow, baseMs]);
 
-  const changeDay = (offset: number) => {
-    setDayOffset(offset);
-    setActiveIdx(null);
-  };
+  // Scroll the bar so a specific home-local day is near the viewport center.
+  const scrollToDayOffset = useCallback(
+    (offset: number, smooth: boolean) => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const targetMs = homeTzMidnightMs(homeTz, realNow) + offset * 24 * HOUR_MS;
+      const targetColIdx = (targetMs - baseMs) / HOUR_MS;
+      // Put that day's 09:00 near the left edge of the viewport — most of a
+      // working day is visible without scrolling.
+      const targetX =
+        Math.max(0, (targetColIdx + 9) * COL_WIDTH - el.clientWidth / 2);
+      el.scrollTo({
+        left: Math.min(targetX, BAR_TOTAL_WIDTH - el.clientWidth),
+        behavior: smooth ? "smooth" : "auto",
+      });
+    },
+    [baseMs, homeTz, realNow]
+  );
+
+  // Place the scroll near "now" when bars first mount so the user doesn't
+  // land on yesterday's column 0.
+  useEffect(() => {
+    if (viewMode !== "bars" || initialScrolledRef.current) return;
+    if (!hydrated || cities.length === 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    initialScrolledRef.current = true;
+    const nowColIdx = Math.floor((realNow.getTime() - baseMs) / HOUR_MS);
+    const targetX = Math.max(
+      0,
+      nowColIdx * COL_WIDTH - el.clientWidth / 2 + COL_WIDTH / 2
+    );
+    el.scrollLeft = Math.min(targetX, BAR_TOTAL_WIDTH - el.clientWidth);
+  }, [viewMode, hydrated, cities.length, realNow, baseMs]);
+
+  // As the user scrolls the bar, infer which home-local day is centered in
+  // the viewport and reflect it in the date strip.
+  const todayDateNumber = useMemo(
+    () => cityDateNumber(homeTz, realNow),
+    [homeTz, realNow]
+  );
+  const handleScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const el = e.currentTarget;
+      const centerX = el.scrollLeft + el.clientWidth / 2;
+      const centerColIdx = Math.max(
+        0,
+        Math.min(HOURS_WINDOW - 1, Math.round(centerX / COL_WIDTH))
+      );
+      const centerMs = baseMs + centerColIdx * HOUR_MS;
+      const centerDate = cityDateNumber(homeTz, new Date(centerMs));
+      const offset = dateNumberDiffDays(centerDate, todayDateNumber);
+      setDayOffset((cur) => (cur === offset ? cur : offset));
+    },
+    [baseMs, homeTz, todayDateNumber]
+  );
+
+  const changeDay = useCallback(
+    (offset: number) => {
+      setActiveIdx(null);
+      scrollToDayOffset(offset, true);
+    },
+    [scrollToDayOffset]
+  );
 
   const openDatePicker = () => {
     const el = dateInputRef.current;
@@ -122,7 +172,9 @@ export default function AppPage() {
     const picked = new Date(value + "T00:00:00");
     const today = new Date(realNow);
     today.setHours(0, 0, 0, 0);
-    const offset = Math.round((picked.getTime() - today.getTime()) / DAY_MS);
+    const offset = Math.round(
+      (picked.getTime() - today.getTime()) / (24 * HOUR_MS)
+    );
     changeDay(offset);
   };
 
@@ -199,81 +251,58 @@ export default function AppPage() {
         {!hydrated ? null : cities.length === 0 ? (
           <EmptyState onAdd={() => setAddOpen(true)} />
         ) : viewMode === "list" ? (
-          // Compact list — no horizontal scroll, no bars.
           <div>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={cities.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {cities.map((city) => (
-                  <CityRow
-                    key={city.id}
-                    city={city}
-                    isHome={city.id === homeId}
-                    homeTz={homeTz}
-                    now={realNow}
-                    referenceNow={referenceNow}
-                    startOffsetHours={START_OFFSET}
-                    hours={HOURS_WINDOW}
-                    colWidth={COL_WIDTH}
-                    compact
-                    selectedRange={null}
-                    activeIdx={null}
-                    onCellTap={() => {}}
-                    onRemove={() => removeCity(city.id)}
-                    onMakeHome={() => makeHome(city.id)}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+            {cities.map((city) => (
+              <CityRow
+                key={city.id}
+                city={city}
+                isHome={city.id === homeId}
+                homeTz={homeTz}
+                now={realNow}
+                referenceNow={realNow}
+                startOffsetHours={START_OFFSET}
+                hours={HOURS_WINDOW}
+                colWidth={COL_WIDTH}
+                compact
+                selectedRange={null}
+                activeIdx={null}
+                onCellTap={() => {}}
+                onMakeHome={() => makeHome(city.id)}
+              />
+            ))}
           </div>
         ) : (
-          // Bars view — ONE shared horizontal scroll holds every row's bar
-          // so they're physically the same scrolling element. No JS sync,
-          // no possible drift between rows.
-          <div className="overflow-x-auto overflow-y-hidden no-scrollbar snap-hours">
-            <div
-              className="relative"
-              style={{ width: BAR_TOTAL_WIDTH }}
-            >
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={cities.map((c) => c.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {cities.map((city) => (
-                    <CityRow
-                      key={city.id}
-                      city={city}
-                      isHome={city.id === homeId}
-                      homeTz={homeTz}
-                      now={realNow}
-                      referenceNow={referenceNow}
-                      startOffsetHours={START_OFFSET}
-                      hours={HOURS_WINDOW}
-                      colWidth={COL_WIDTH}
-                      compact={false}
-                      selectedRange={selectedRange}
-                      activeIdx={activeIdx}
-                      onCellTap={(i) =>
-                        setActiveIdx((cur) => (cur === i ? null : i))
-                      }
-                      onRemove={() => removeCity(city.id)}
-                      onMakeHome={() => makeHome(city.id)}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-              <TimeColumnOverlay activeIdx={activeIdx} colWidth={COL_WIDTH} />
+          <div
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="overflow-x-auto overflow-y-hidden no-scrollbar snap-hours"
+          >
+            <div className="relative" style={{ width: BAR_TOTAL_WIDTH }}>
+              {cities.map((city) => (
+                <CityRow
+                  key={city.id}
+                  city={city}
+                  isHome={city.id === homeId}
+                  homeTz={homeTz}
+                  now={realNow}
+                  referenceNow={realNow}
+                  startOffsetHours={START_OFFSET}
+                  hours={HOURS_WINDOW}
+                  colWidth={COL_WIDTH}
+                  compact={false}
+                  selectedRange={selectedRange}
+                  activeIdx={activeIdx}
+                  onCellTap={(i) =>
+                    setActiveIdx((cur) => (cur === i ? null : i))
+                  }
+                  onMakeHome={() => makeHome(city.id)}
+                />
+              ))}
+              <TimeColumnOverlay
+                activeIdx={activeIdx}
+                nowIdx={nowIdx}
+                colWidth={COL_WIDTH}
+              />
             </div>
           </div>
         )}
