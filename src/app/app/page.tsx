@@ -79,13 +79,6 @@ export default function AppPage() {
     return { fromMs, toMs: fromMs + HOUR_MS };
   }, [activeIdx, baseMs]);
 
-  // Column index of the current real hour within the visible 7-day window.
-  const nowIdx = useMemo(() => {
-    const delta = realNow.getTime() - baseMs;
-    if (delta < 0 || delta >= HOURS_WINDOW * HOUR_MS) return null;
-    return Math.floor(delta / HOUR_MS);
-  }, [realNow, baseMs]);
-
   // Scroll the bar so a specific home-local day is near the viewport center.
   const scrollToDayOffset = useCallback(
     (offset: number, smooth: boolean) => {
@@ -300,7 +293,6 @@ export default function AppPage() {
               ))}
               <TimeColumnOverlay
                 activeIdx={activeIdx}
-                nowIdx={nowIdx}
                 colWidth={COL_WIDTH}
               />
             </div>
