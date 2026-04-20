@@ -87,6 +87,17 @@ function AppInner() {
     return new Date(realNow.getTime() + dayOffset * DAY_MS);
   }, [realNow, dayOffset]);
 
+  // Absolute interval the user has selected by tapping a column. Each city
+  // row will render this in its own local time on the right.
+  const selectedRange = useMemo(() => {
+    if (activeIdx == null) return null;
+    const t = referenceNow.getTime();
+    const baseMs =
+      t + START_OFFSET * HOUR_MS - (t % HOUR_MS);
+    const fromMs = baseMs + activeIdx * HOUR_MS;
+    return { fromMs, toMs: fromMs + HOUR_MS };
+  }, [activeIdx, referenceNow]);
+
   const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
@@ -221,6 +232,7 @@ function AppInner() {
                     hours={HOURS_WINDOW}
                     colWidth={COL_WIDTH}
                     compact={viewMode === "list"}
+                    selectedRange={selectedRange}
                     activeIdx={activeIdx}
                     onCellTap={(i) =>
                       setActiveIdx((cur) => (cur === i ? null : i))

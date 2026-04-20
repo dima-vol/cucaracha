@@ -7,9 +7,7 @@ const HOUR_MS = 60 * 60 * 1000;
 
 type Props = {
   timezone: string;
-  now: Date;
-  /** `startOffsetHours` is measured against the reference instant used by the
-   *  owning page (usually `viewNow`). */
+  /** Reference instant — start of the visible window is computed from this. */
   referenceNow: Date;
   startOffsetHours: number;
   hours: number;
@@ -22,7 +20,6 @@ type Props = {
 
 export function TimeBar({
   timezone,
-  now,
   referenceNow,
   startOffsetHours,
   hours,
@@ -42,12 +39,6 @@ export function TimeBar({
     return { t, parts };
   });
 
-  // Column of the wall-clock "now" — may be null when we're previewing a
-  // future day (the window no longer contains the present moment).
-  const delta = now.getTime() - baseMs;
-  const nowIdx =
-    delta >= 0 && delta < hours * HOUR_MS ? Math.floor(delta / HOUR_MS) : -1;
-
   return (
     <div
       className="flex items-stretch select-none"
@@ -56,7 +47,6 @@ export function TimeBar({
       {cells.map((c, i) => {
         const tier = hourTier(c.parts.hour24);
         const isMidnight = c.parts.hour24 === 0;
-        const isNow = i === nowIdx;
         const isActive = activeIdx === i;
         const night = tier === "night";
         return (
@@ -66,15 +56,11 @@ export function TimeBar({
             onClick={() => onCellTap?.(i)}
             className={cn(
               "tz-cell relative flex-none flex items-center justify-center",
-              tier === "day" && "bg-[var(--day-tint)]",
-              tier === "evening" && "bg-[var(--evening-tint)]",
               night && "bg-[var(--night-tint)]",
-              isNow && !isActive && "tz-cell-now",
               isActive && "tz-cell-active"
             )}
             style={{ width: colWidth }}
             aria-label={`${c.parts.hour12}${c.parts.ampm} ${c.parts.month} ${c.parts.day}`}
-            aria-current={isNow ? "time" : undefined}
           >
             {isMidnight ? (
               <span className="flex flex-col items-center justify-center leading-none rounded-[3px] bg-[var(--daychip)] px-1.5 py-1">
@@ -87,20 +73,10 @@ export function TimeBar({
               </span>
             ) : (
               <span className="flex flex-col items-center justify-center leading-none">
-                <span
-                  className={cn(
-                    "text-[14px] font-medium tabular-nums leading-none",
-                    night ? "text-white" : "text-slate-700"
-                  )}
-                >
+                <span className="text-[14px] font-medium tabular-nums leading-none text-slate-700">
                   {c.parts.hour12}
                 </span>
-                <span
-                  className={cn(
-                    "mt-[3px] text-[9px] font-medium uppercase tracking-[0.04em] leading-none",
-                    night ? "text-white/85" : "text-slate-400"
-                  )}
-                >
+                <span className="mt-[3px] text-[9px] font-medium uppercase tracking-[0.04em] leading-none text-slate-400">
                   {c.parts.ampm}
                 </span>
               </span>

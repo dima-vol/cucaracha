@@ -7,11 +7,18 @@
   --border: #e5e5e5;
   --accent: #ea580c;
   --accent-soft: #fff7ed;
-  --home-tint: #fffbeb;
-  --day-tint: #fffdf5;
-  --evening-tint: #dbe3ef;
-  --night-tint: #8aa0bb;
-  --daychip: #5e7493;
+  /* Apple system green — used for tap-selected hour columns + the time-
+     range shown on the right of each row. Action / picked-window color. */
+  --selection: #34c759;
+  --selection-soft: rgba(52, 199, 89, 0.10);
+  /* Day cells are intentionally transparent so the row background bleeds
+     through (so the home row's amber tint reads in the bar too). */
+  --day-tint: transparent;
+  --night-tint: #d8e2ee;
+  --daychip: #6f8aa6;
+  /* Home row tint — strong enough to read as "this is your reference" but
+     not so strong it competes with the night band. */
+  --home-tint: #fef3c7;
 }
 
 @theme inline {
@@ -20,6 +27,7 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-selection: var(--selection);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -37,7 +45,6 @@ html, body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
-/* Native momentum on iOS; snap to whole hours is handled in JS. */
 .snap-hours {
   -webkit-overflow-scrolling: touch;
 }
@@ -53,17 +60,14 @@ html, body {
 /* --- Hour cell ---------------------------------------------------------- */
 .tz-cell {
   position: relative;
-  /* Remove the 300ms iOS tap delay and disable double-tap zoom so single
-     taps register instantly. */
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
 }
 
-/* "Now" and "active" rings are drawn as a pseudo-element overlay inset
-   to the cell's border box. Safari renders inset box-shadows inconsistently
-   at fractional pixel widths with rounded corners, so a dedicated border
-   on an ::after element is the robust approach. */
+/* Selected hour ring is a dedicated ::after element — Safari paints inset
+   box-shadows with rounded corners inconsistently at fractional pixel
+   widths, so a normal CSS border on a pseudo-element is the robust path. */
 .tz-cell::after {
   content: "";
   position: absolute;
@@ -71,18 +75,11 @@ html, body {
   border-radius: 4px;
   pointer-events: none;
   border: 0 solid transparent;
-  transition: border-color 90ms linear, border-width 90ms linear;
-}
-.tz-cell-now::after {
-  border-width: 1px;
-  border-color: rgba(234, 88, 12, 0.55); /* accent @ 55% */
 }
 .tz-cell-active::after {
   border-width: 2px;
-  border-color: rgb(15, 23, 42); /* slate-900 */
+  border-color: var(--selection);
 }
 .tz-cell-active {
-  /* Visible wash under the ring so the selection reads clearly without
-     making the tier (day/evening/night) colour disappear. */
-  background-color: rgba(15, 23, 42, 0.08) !important;
+  background-color: var(--selection-soft) !important;
 }

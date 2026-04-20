@@ -12,8 +12,7 @@ import {
 /**
  * Keeps the horizontal scroll position of every registered bar in lock-step
  * with whatever bar the user is actively touching, and — after the scroll
- * settles — gently eases the whole group onto the nearest hour boundary so
- * the grid always lines up.
+ * settles — gently eases the whole group onto the nearest hour boundary.
  *
  * Two deliberate design choices:
  *
@@ -21,13 +20,14 @@ import {
  *    calls a ref callback on every mount and unmount; a ref object is
  *    written to silently and never triggers a re-register. That means
  *    toggling list-view off and back on — which unmounts/remounts the bar
- *    divs — keeps the scroll group accurate instead of silently losing the
- *    new bars.
+ *    divs — keeps the scroll group accurate instead of silently losing
+ *    the new bars.
  *
- * 2. No overlay or CSS variable shares scroll state with anything outside
- *    the bars themselves. Current-hour / tapped-hour indicators live as
- *    box-shadows on the cells, so they're part of the bar's own
- *    compositor layer and have zero lag relative to the scroll.
+ * 2. The settle animation is driven by a *single* requestAnimationFrame
+ *    loop that updates every bar's scrollLeft inside one frame. The
+ *    browser's own smooth-scroll easing runs each element on its own
+ *    schedule, which produces a visible "ripple" across the rows; doing
+ *    the work ourselves guarantees lock-step.
  */
 type Ctx = {
   register: (el: HTMLElement) => () => void;
@@ -37,23 +37,38 @@ const ScrollSyncCtx = createContext<Ctx | null>(null);
 
 type ProviderProps = {
   children: ReactNode;
-  /** Pixel width of one hour column. If set, we debounce-settle every bar
-   *  onto the nearest multiple of this after the user stops scrolling. */
+  /** Pixel width of one hour column. If set, we settle every bar onto the
+   *  nearest multiple after the user stops scrolling. */
   snapWidth?: number;
   /** How long to wait after the last scroll event before settling. */
   snapIdleMs?: number;
+  /** Settle animation duration. */
+  settleMs?: number;
 };
 
 export function ScrollSyncProvider({
   children,
   snapWidth,
-  snapIdleMs = 120,
+  snapIdleMs = 110,
+  settleMs = 220,
 }: ProviderProps) {
   const nodesRef = useRef<Set<HTMLElement>>(new Set());
   const applyingRef = useRef(false);
   const idleTimerRef = useRef<number | null>(null);
+  const animFrameRef = useRef<number | null>(null);
   const lastSourceRef = useRef<HTMLElement | null>(null);
 
+  const cancelAnim = useCallback(() => {
+    if (animFrameRef.current != null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+  }, []);
+
+  // Mirror is synchronous: we want every bar to move within the same paint
+  // cycle as the source. Doing it inside requestAnimationFrame would queue
+  // the mirror behind the source's natural scroll, which is what creates
+  // the "ripple" feeling.
   const mirror = useCallback((src: HTMLElement, left: number) => {
     applyingRef.current = true;
     nodesRef.current.forEach((el) => {
@@ -72,29 +87,42 @@ export function ScrollSyncProvider({
       if (!src || !src.isConnected) return;
       const raw = src.scrollLeft;
       const target = Math.round(raw / snapWidth) * snapWidth;
-      if (Math.abs(target - raw) < 0.5) return; // already on grid
-      applyingRef.current = true;
-      // Ease the source smoothly; mirror the exact target onto the others
-      // so the column strip stays visually locked during the ease.
-      try {
-        src.scrollTo({ left: target, behavior: "smooth" });
-      } catch {
-        src.scrollLeft = target;
-      }
+      if (Math.abs(target - raw) < 0.5) return;
+
+      // Snapshot every connected bar's start position so we can tween them
+      // all in lock-step. This is the key to "no ripple": one RAF callback
+      // updates every bar to the same eased value within one frame.
+      const elements: HTMLElement[] = [];
+      const starts = new Map<HTMLElement, number>();
       nodesRef.current.forEach((el) => {
-        if (el === src) return;
-        try {
-          el.scrollTo({ left: target, behavior: "smooth" });
-        } catch {
-          el.scrollLeft = target;
-        }
+        if (!el.isConnected) return;
+        elements.push(el);
+        starts.set(el, el.scrollLeft);
       });
-      // Release the guard after the smooth easing is definitely done.
-      window.setTimeout(() => {
-        applyingRef.current = false;
-      }, 320);
+      if (elements.length === 0) return;
+
+      cancelAnim();
+      applyingRef.current = true;
+      const startTime = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - startTime) / settleMs);
+        const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+        for (const el of elements) {
+          const start = starts.get(el) ?? 0;
+          el.scrollLeft = start + (target - start) * eased;
+        }
+        if (t < 1) {
+          animFrameRef.current = requestAnimationFrame(tick);
+        } else {
+          animFrameRef.current = null;
+          // Final exact snap to clear any sub-pixel residue.
+          for (const el of elements) el.scrollLeft = target;
+          applyingRef.current = false;
+        }
+      };
+      animFrameRef.current = requestAnimationFrame(tick);
     }, snapIdleMs);
-  }, [snapWidth, snapIdleMs]);
+  }, [snapWidth, snapIdleMs, settleMs, cancelAnim]);
 
   const handleScroll = useCallback(
     (e: Event) => {
@@ -110,7 +138,6 @@ export function ScrollSyncProvider({
   const register = useCallback(
     (el: HTMLElement) => {
       if (nodesRef.current.has(el)) {
-        // Defensive: idempotent register.
         return () => {
           el.removeEventListener("scroll", handleScroll);
           nodesRef.current.delete(el);
@@ -138,8 +165,9 @@ export function ScrollSyncProvider({
   useEffect(() => {
     return () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
+      cancelAnim();
     };
-  }, []);
+  }, [cancelAnim]);
 
   return (
     <ScrollSyncCtx.Provider value={{ register }}>

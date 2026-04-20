@@ -21,16 +21,37 @@ function pop(c: RawCity): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-/** Fuzzy-ish prefix+substring search, ranked by population. */
+// BGN/PCGN-flavored map for Russian / Ukrainian / Bulgarian inputs. The
+// bundled dataset only stores Latin city names ("Krasnoyarsk", "Moscow"),
+// so a user typing "Красноярск" wouldn't match anything otherwise.
+const CYR_TO_LAT: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", ґ: "g", д: "d", е: "e", є: "ye",
+  ё: "yo", ж: "zh", з: "z", и: "i", і: "i", ї: "yi", й: "y",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r",
+  с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch",
+  ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu",
+  я: "ya",
+};
+
+function transliterate(s: string): string {
+  let out = "";
+  for (const ch of s) {
+    out += CYR_TO_LAT[ch] ?? ch;
+  }
+  return out;
+}
+
+/** Fuzzy-ish prefix+substring search, ranked by population. Cyrillic input
+ *  is transliterated to Latin first so users can search in either script. */
 export function searchCities(query: string, limit = 30): RawCity[] {
-  const q = query.trim().toLowerCase();
-  if (!q) {
-    // Default: top cities by population (useful for empty state)
+  const raw = query.trim().toLowerCase();
+  if (!raw) {
     return [...ALL_CITIES]
       .filter((c) => pop(c) > 0)
       .sort((a, b) => pop(b) - pop(a))
       .slice(0, limit);
   }
+  const q = transliterate(raw);
   const starts: RawCity[] = [];
   const contains: RawCity[] = [];
   for (const c of ALL_CITIES) {
@@ -50,7 +71,6 @@ export function searchCities(query: string, limit = 30): RawCity[] {
 }
 
 export function cityKey(c: RawCity): string {
-  // Stable, reasonably unique key
   return `${c.city_ascii}-${c.iso2}-${c.province || "_"}-${c.timezone}`.replace(
     /\s+/g,
     "_"

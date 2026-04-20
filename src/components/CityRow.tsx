@@ -4,24 +4,34 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Home, X } from "lucide-react";
 import type { CityEntry } from "@/lib/tz";
-import { cityClock, cityTzAbbr, offsetFromHomeLabel } from "@/lib/tz";
+import {
+  cityClock,
+  cityRange,
+  cityTzAbbr,
+  dateDeltaDays,
+  offsetFromHomeLabel,
+} from "@/lib/tz";
 import { cn } from "@/lib/cn";
 import { TimeBar } from "./TimeBar";
 import { useScrollSync } from "./ScrollSync";
+
+type SelectedRange = { fromMs: number; toMs: number } | null;
 
 type Props = {
   city: CityEntry;
   isHome: boolean;
   homeTz: string;
-  /** Wall-clock "now" used to pick out the current hour cell. */
+  /** Wall-clock now — used for the right-hand clock when no selection. */
   now: Date;
-  /** Reference instant for the bar window — differs from `now` when the
-   *  user has paged forward or back in the date strip. */
+  /** Reference instant for the bar window (= viewNow in the parent). */
   referenceNow: Date;
   startOffsetHours: number;
   hours: number;
   colWidth: number;
   compact: boolean;
+  /** When a column is tapped, the parent computes the absolute interval and
+   *  we render it in this city's local time (replaces the clock). */
+  selectedRange: SelectedRange;
   activeIdx: number | null;
   onCellTap: (idx: number) => void;
   onRemove: () => void;
@@ -38,6 +48,7 @@ export function CityRow({
   hours,
   colWidth,
   compact,
+  selectedRange,
   activeIdx,
   onCellTap,
   onRemove,
@@ -46,13 +57,28 @@ export function CityRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: city.id });
 
+  // Callback ref so the bar re-registers with ScrollSync after a list-view
+  // toggle remounts it (no silent loss of sync).
   const setBarRef = useScrollSync();
 
-  // Use `referenceNow` as the visible window anchor but `now` as the
-  // wall-clock reference for the city's own clock display.
-  const clock = cityClock(city.timezone, now);
   const abbr = cityTzAbbr(city.timezone, now);
   const offsetLabel = isHome ? "" : offsetFromHomeLabel(homeTz, city.timezone, now);
+
+  // The right-hand display: either the selected slot rendered in this
+  // city's local time, or the city's wall-clock time if no selection.
+  const rightText = selectedRange
+    ? cityRange(city.timezone, selectedRange.fromMs, selectedRange.toMs)
+    : null;
+  const localClock = cityClock(city.timezone, now);
+
+  // Cross-day indicator: is this city's local calendar date ahead of /
+  // behind the home city's at the moment we're displaying?
+  const referenceMs = selectedRange ? selectedRange.fromMs : now.getTime();
+  const dayDelta = isHome
+    ? 0
+    : dateDeltaDays(homeTz, city.timezone, new Date(referenceMs));
+  const dayLabel =
+    dayDelta === 1 ? "NEXT DAY" : dayDelta === -1 ? "DAY BEFORE" : "";
 
   return (
     <div
@@ -64,15 +90,14 @@ export function CityRow({
       }}
       className={cn(
         "group",
+        // Whole-row amber for the home row so its bar cells (which have a
+        // transparent day tint) read as amber too — strongest possible
+        // "you live here" affordance without breaking the time-bar grid.
+        isHome ? "bg-[var(--home-tint)]" : "bg-white",
         compact && "border-b border-[var(--border)]"
       )}
     >
-      <div
-        className={cn(
-          "flex items-center gap-2 px-4 h-9",
-          isHome ? "bg-[var(--home-tint)]" : "bg-white"
-        )}
-      >
+      <div className="relative flex items-center gap-2 px-4 h-9">
         <button
           type="button"
           onClick={onMakeHome}
@@ -104,11 +129,26 @@ export function CityRow({
           )}
         </h3>
 
-        <div className="flex-none text-[17px] font-medium tabular-nums tracking-tight text-slate-900 leading-none whitespace-nowrap">
-          {clock.time}
-          <span className="ml-0.5 text-[11px] font-normal text-slate-400">
-            {clock.ampm}
-          </span>
+        {/* Right cluster: optional cross-day chip, then either the selected
+            range (green) or the wall-clock time (slate). */}
+        <div className="flex-none flex items-center gap-1.5 whitespace-nowrap">
+          {dayLabel && (
+            <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-red-500 leading-none">
+              {dayLabel}
+            </span>
+          )}
+          {rightText ? (
+            <span className="text-[15px] font-medium tabular-nums tracking-tight leading-none text-[var(--selection)]">
+              {rightText}
+            </span>
+          ) : (
+            <span className="text-[17px] font-medium tabular-nums tracking-tight leading-none text-slate-900">
+              {localClock.time}
+              <span className="ml-0.5 text-[11px] font-normal text-slate-400">
+                {localClock.ampm}
+              </span>
+            </span>
+          )}
         </div>
 
         <div className="flex-none flex items-center gap-0.5 -mr-1">
@@ -139,7 +179,6 @@ export function CityRow({
         >
           <TimeBar
             timezone={city.timezone}
-            now={now}
             referenceNow={referenceNow}
             startOffsetHours={startOffsetHours}
             hours={hours}
