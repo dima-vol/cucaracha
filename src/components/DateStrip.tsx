@@ -73,6 +73,8 @@ export function DateStrip({
               aria-label={`${MONTH_LABELS[month]} ${dom}`}
               className={cn(
                 "flex-none w-[60px] h-11 flex flex-col items-center justify-center rounded-lg",
+                "active:bg-slate-100 active:scale-[0.97] transition-transform duration-75",
+                "[touch-action:manipulation] [-webkit-tap-highlight-color:transparent]",
                 isSelected
                   ? "border border-slate-900"
                   : "border border-transparent hover:bg-slate-50"

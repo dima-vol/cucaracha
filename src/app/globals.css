@@ -7,17 +7,15 @@
   --border: #e5e5e5;
   --accent: #ea580c;
   --accent-soft: #fff7ed;
-  /* Apple system green — used for tap-selected hour columns + the time-
-     range shown on the right of each row. Action / picked-window color. */
-  --selection: #34c759;
-  --selection-soft: rgba(52, 199, 89, 0.10);
+  /* Apple system blue — used for the tap-selected hour column and the
+     time-range shown on the right of each row. */
+  --selection: #007aff;
+  --selection-soft: rgba(0, 122, 255, 0.10);
   /* Day cells are intentionally transparent so the row background bleeds
      through (so the home row's amber tint reads in the bar too). */
   --day-tint: transparent;
   --night-tint: #d8e2ee;
   --daychip: #6f8aa6;
-  /* Home row tint — strong enough to read as "this is your reference" but
-     not so strong it competes with the night band. */
   --home-tint: #fef3c7;
 }
 
@@ -45,6 +43,7 @@ html, body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
+/* iOS native momentum on the shared scroll. */
 .snap-hours {
   -webkit-overflow-scrolling: touch;
 }
@@ -63,23 +62,17 @@ html, body {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.05);
+  /* So a non-selected cell can be smoothly dimmed when the user picks a
+     column without competing with the selection. */
+  transition: opacity 80ms linear, filter 80ms linear;
 }
 
-/* Selected hour ring is a dedicated ::after element — Safari paints inset
-   box-shadows with rounded corners inconsistently at fractional pixel
-   widths, so a normal CSS border on a pseudo-element is the robust path. */
-.tz-cell::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 4px;
-  pointer-events: none;
-  border: 0 solid transparent;
+/* Bar in "selection-active" mode: every cell that isn't the selected
+   column fades back, so the picked window is the only sharp thing on
+   the row. The selected cell keeps full opacity (handled below). */
+.tz-bar-selecting .tz-cell {
+  opacity: 0.32;
 }
-.tz-cell-active::after {
-  border-width: 2px;
-  border-color: var(--selection);
-}
-.tz-cell-active {
-  background-color: var(--selection-soft) !important;
+.tz-bar-selecting .tz-cell.tz-cell-active {
+  opacity: 1;
 }

@@ -7,13 +7,12 @@ const HOUR_MS = 60 * 60 * 1000;
 
 type Props = {
   timezone: string;
-  /** Reference instant — start of the visible window is computed from this. */
   referenceNow: Date;
   startOffsetHours: number;
   hours: number;
   colWidth?: number;
-  /** Index of the column the user tapped; every bar highlights the same
-   *  column so the selection reads vertically across all cities. */
+  /** When set, every cell except the one at `activeIdx` is dimmed so the
+   *  selection reads as the only sharp thing on the row. */
   activeIdx?: number | null;
   onCellTap?: (idx: number) => void;
 };
@@ -27,7 +26,6 @@ export function TimeBar({
   activeIdx = null,
   onCellTap,
 }: Props) {
-  // Align to whole hours so every column lands on :00.
   const baseMs =
     referenceNow.getTime() +
     startOffsetHours * HOUR_MS -
@@ -41,7 +39,10 @@ export function TimeBar({
 
   return (
     <div
-      className="flex items-stretch select-none"
+      className={cn(
+        "flex items-stretch select-none",
+        activeIdx != null && "tz-bar-selecting"
+      )}
       style={{ width: hours * colWidth, height: 48 }}
     >
       {cells.map((c, i) => {

@@ -19,7 +19,7 @@ import { CalendarDays, List, LayoutList, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { CityRow } from "@/components/CityRow";
 import { AddCitySheet } from "@/components/AddCitySheet";
-import { ScrollSyncProvider } from "@/components/ScrollSync";
+import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
 import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
 
@@ -29,18 +29,11 @@ const COL_WIDTH = 52;
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 const MINUTE_MS = 60 * 1000;
+const BAR_TOTAL_WIDTH = HOURS_WINDOW * COL_WIDTH;
 
 type ViewMode = "bars" | "list";
 
 export default function AppPage() {
-  return (
-    <ScrollSyncProvider snapWidth={COL_WIDTH}>
-      <AppInner />
-    </ScrollSyncProvider>
-  );
-}
-
-function AppInner() {
   const { cities, homeId, hydrated, addCity, removeCity, makeHome, reorder } =
     useCities();
   const [realNow, setRealNow] = useState<Date>(() => new Date());
@@ -79,21 +72,15 @@ function AppInner() {
     [cities]
   );
 
-  // Anchor instant for the bar window. When the user is on today this is
-  // just the wall clock; when they've paged forward it shifts by 24h per
-  // day but keeps the same time-of-day.
   const referenceNow = useMemo(() => {
     if (dayOffset === 0) return realNow;
     return new Date(realNow.getTime() + dayOffset * DAY_MS);
   }, [realNow, dayOffset]);
 
-  // Absolute interval the user has selected by tapping a column. Each city
-  // row will render this in its own local time on the right.
   const selectedRange = useMemo(() => {
     if (activeIdx == null) return null;
     const t = referenceNow.getTime();
-    const baseMs =
-      t + START_OFFSET * HOUR_MS - (t % HOUR_MS);
+    const baseMs = t + START_OFFSET * HOUR_MS - (t % HOUR_MS);
     const fromMs = baseMs + activeIdx * HOUR_MS;
     return { fromMs, toMs: fromMs + HOUR_MS };
   }, [activeIdx, referenceNow]);
@@ -104,9 +91,6 @@ function AppInner() {
     reorder(String(active.id), String(over.id));
   };
 
-  // Changing the day shifts every column's absolute instant by 24h, so any
-  // lingering tap-selection no longer points at the hour the user picked.
-  // Clear it so the new view starts fresh.
   const changeDay = (offset: number) => {
     setDayOffset(offset);
     setActiveIdx(null);
@@ -142,7 +126,7 @@ function AppInner() {
 
   return (
     <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
-      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[var(--border)]">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[var(--border)]">
         <div className="px-3 h-11 flex items-center">
           <button
             type="button"
@@ -209,8 +193,9 @@ function AppInner() {
       <main className="flex-1">
         {!hydrated ? null : cities.length === 0 ? (
           <EmptyState onAdd={() => setAddOpen(true)} />
-        ) : (
-          <div className="relative">
+        ) : viewMode === "list" ? (
+          // Compact list — no horizontal scroll, no bars.
+          <div>
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -231,18 +216,60 @@ function AppInner() {
                     startOffsetHours={START_OFFSET}
                     hours={HOURS_WINDOW}
                     colWidth={COL_WIDTH}
-                    compact={viewMode === "list"}
-                    selectedRange={selectedRange}
-                    activeIdx={activeIdx}
-                    onCellTap={(i) =>
-                      setActiveIdx((cur) => (cur === i ? null : i))
-                    }
+                    compact
+                    selectedRange={null}
+                    activeIdx={null}
+                    onCellTap={() => {}}
                     onRemove={() => removeCity(city.id)}
                     onMakeHome={() => makeHome(city.id)}
                   />
                 ))}
               </SortableContext>
             </DndContext>
+          </div>
+        ) : (
+          // Bars view — ONE shared horizontal scroll holds every row's bar
+          // so they're physically the same scrolling element. No JS sync,
+          // no possible drift between rows.
+          <div className="overflow-x-auto overflow-y-hidden no-scrollbar snap-hours">
+            <div
+              className="relative"
+              style={{ width: BAR_TOTAL_WIDTH }}
+            >
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={cities.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {cities.map((city) => (
+                    <CityRow
+                      key={city.id}
+                      city={city}
+                      isHome={city.id === homeId}
+                      homeTz={homeTz}
+                      now={realNow}
+                      referenceNow={referenceNow}
+                      startOffsetHours={START_OFFSET}
+                      hours={HOURS_WINDOW}
+                      colWidth={COL_WIDTH}
+                      compact={false}
+                      selectedRange={selectedRange}
+                      activeIdx={activeIdx}
+                      onCellTap={(i) =>
+                        setActiveIdx((cur) => (cur === i ? null : i))
+                      }
+                      onRemove={() => removeCity(city.id)}
+                      onMakeHome={() => makeHome(city.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+              <TimeColumnOverlay activeIdx={activeIdx} colWidth={COL_WIDTH} />
+            </div>
           </div>
         )}
       </main>

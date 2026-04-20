@@ -13,7 +13,6 @@ import {
 } from "@/lib/tz";
 import { cn } from "@/lib/cn";
 import { TimeBar } from "./TimeBar";
-import { useScrollSync } from "./ScrollSync";
 
 type SelectedRange = { fromMs: number; toMs: number } | null;
 
@@ -21,16 +20,12 @@ type Props = {
   city: CityEntry;
   isHome: boolean;
   homeTz: string;
-  /** Wall-clock now — used for the right-hand clock when no selection. */
   now: Date;
-  /** Reference instant for the bar window (= viewNow in the parent). */
   referenceNow: Date;
   startOffsetHours: number;
   hours: number;
   colWidth: number;
   compact: boolean;
-  /** When a column is tapped, the parent computes the absolute interval and
-   *  we render it in this city's local time (replaces the clock). */
   selectedRange: SelectedRange;
   activeIdx: number | null;
   onCellTap: (idx: number) => void;
@@ -57,22 +52,14 @@ export function CityRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: city.id });
 
-  // Callback ref so the bar re-registers with ScrollSync after a list-view
-  // toggle remounts it (no silent loss of sync).
-  const setBarRef = useScrollSync();
-
   const abbr = cityTzAbbr(city.timezone, now);
   const offsetLabel = isHome ? "" : offsetFromHomeLabel(homeTz, city.timezone, now);
 
-  // The right-hand display: either the selected slot rendered in this
-  // city's local time, or the city's wall-clock time if no selection.
   const rightText = selectedRange
     ? cityRange(city.timezone, selectedRange.fromMs, selectedRange.toMs)
     : null;
   const localClock = cityClock(city.timezone, now);
 
-  // Cross-day indicator: is this city's local calendar date ahead of /
-  // behind the home city's at the moment we're displaying?
   const referenceMs = selectedRange ? selectedRange.fromMs : now.getTime();
   const dayDelta = isHome
     ? 0
@@ -87,17 +74,27 @@ export function CityRow({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.7 : 1,
+        // Each row is at least the bar's full width so its child header can
+        // sit sticky-pinned to the scroll container's visible left edge.
+        width: compact ? "100%" : hours * colWidth,
       }}
       className={cn(
-        "group",
-        // Whole-row amber for the home row so its bar cells (which have a
-        // transparent day tint) read as amber too — strongest possible
-        // "you live here" affordance without breaking the time-bar grid.
+        "group relative",
         isHome ? "bg-[var(--home-tint)]" : "bg-white",
         compact && "border-b border-[var(--border)]"
       )}
     >
-      <div className="relative flex items-center gap-2 px-4 h-9">
+      {/* The header is pinned to the visible left edge of the shared
+          horizontal scroll container, so as bars scroll the city name and
+          the time/range stay readable at all times. z-10 keeps the
+          opaque header above the selection overlay below it. */}
+      <div
+        className={cn(
+          "sticky left-0 z-10 flex items-center gap-2 px-4 h-9",
+          isHome ? "bg-[var(--home-tint)]" : "bg-white"
+        )}
+        style={{ width: "100vw" }}
+      >
         <button
           type="button"
           onClick={onMakeHome}
@@ -129,8 +126,6 @@ export function CityRow({
           )}
         </h3>
 
-        {/* Right cluster: optional cross-day chip, then either the selected
-            range (green) or the wall-clock time (slate). */}
         <div className="flex-none flex items-center gap-1.5 whitespace-nowrap">
           {dayLabel && (
             <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-red-500 leading-none">
@@ -173,20 +168,15 @@ export function CityRow({
       </div>
 
       {compact ? null : (
-        <div
-          ref={setBarRef}
-          className="overflow-x-auto no-scrollbar snap-hours"
-        >
-          <TimeBar
-            timezone={city.timezone}
-            referenceNow={referenceNow}
-            startOffsetHours={startOffsetHours}
-            hours={hours}
-            colWidth={colWidth}
-            activeIdx={activeIdx}
-            onCellTap={onCellTap}
-          />
-        </div>
+        <TimeBar
+          timezone={city.timezone}
+          referenceNow={referenceNow}
+          startOffsetHours={startOffsetHours}
+          hours={hours}
+          colWidth={colWidth}
+          activeIdx={activeIdx}
+          onCellTap={onCellTap}
+        />
       )}
     </div>
   );
