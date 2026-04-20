@@ -220,7 +220,6 @@ export default function AppPage() {
                     selectedRange={null}
                     activeIdx={null}
                     onCellTap={() => {}}
-                    onRemove={() => removeCity(city.id)}
                     onMakeHome={() => makeHome(city.id)}
                   />
                 ))}
@@ -262,7 +261,6 @@ export default function AppPage() {
                       onCellTap={(i) =>
                         setActiveIdx((cur) => (cur === i ? null : i))
                       }
-                      onRemove={() => removeCity(city.id)}
                       onMakeHome={() => makeHome(city.id)}
                     />
                   ))}
@@ -277,7 +275,11 @@ export default function AppPage() {
       <AddCitySheet
         open={addOpen}
         onClose={() => setAddOpen(false)}
+        cities={cities}
+        homeId={homeId}
         onPick={(c) => addCity(c)}
+        onRemove={(id) => removeCity(id)}
+        onMakeHome={(id) => makeHome(id)}
         existingIds={existingIds}
       />
     </div>

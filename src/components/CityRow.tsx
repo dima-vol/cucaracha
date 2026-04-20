@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Home, X } from "lucide-react";
+import { GripVertical, Home } from "lucide-react";
 import type { CityEntry } from "@/lib/tz";
 import {
   cityClock,
@@ -29,7 +29,6 @@ type Props = {
   selectedRange: SelectedRange;
   activeIdx: number | null;
   onCellTap: (idx: number) => void;
-  onRemove: () => void;
   onMakeHome: () => void;
 };
 
@@ -46,7 +45,6 @@ export function CityRow({
   selectedRange,
   activeIdx,
   onCellTap,
-  onRemove,
   onMakeHome,
 }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -146,25 +144,15 @@ export function CityRow({
           )}
         </div>
 
-        <div className="flex-none flex items-center gap-0.5 -mr-1">
-          <button
-            type="button"
-            onClick={onRemove}
-            aria-label="Remove city"
-            className="w-7 h-7 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"
-          >
-            <X size={14} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            aria-label="Drag to reorder"
-            className="w-7 h-7 rounded-md text-slate-300 hover:text-slate-500 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical size={16} strokeWidth={1.8} />
-          </button>
-        </div>
+        <button
+          type="button"
+          aria-label="Drag to reorder"
+          className="flex-none w-7 h-7 -mr-1 rounded-md text-slate-300 hover:text-slate-500 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={16} strokeWidth={1.8} />
+        </button>
       </div>
 
       {compact ? null : (
