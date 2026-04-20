@@ -115,14 +115,16 @@ export function CityRow({
           )}
         </button>
 
-        <h3 className="flex-1 min-w-0 truncate text-[17px] font-semibold tracking-tight text-slate-900 leading-none">
-          {city.city}
+        <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
+          <h3 className="truncate text-[17px] font-semibold tracking-tight text-slate-900 leading-none">
+            {city.city}
+          </h3>
           {abbr && (
-            <sup className="ml-1 text-[9px] font-medium uppercase tracking-[0.08em] text-slate-400 align-super relative -top-[1px]">
+            <span className="flex-none text-[9px] font-medium uppercase tracking-[0.08em] text-slate-400 relative -top-[4px]">
               {abbr}
-            </sup>
+            </span>
           )}
-        </h3>
+        </div>
 
         <div className="flex-none flex items-center gap-1.5 whitespace-nowrap">
           {dayLabel && (
