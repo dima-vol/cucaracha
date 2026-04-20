@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Home } from "lucide-react";
+import { Home, Trash2 } from "lucide-react";
 import type { CityEntry } from "@/lib/tz";
 import {
   cityClock,
@@ -29,8 +29,14 @@ type Props = {
   selectedRange: SelectedRange;
   activeIdx: number | null;
   onCellTap: (idx: number) => void;
+  onRemove: () => void;
   onMakeHome: () => void;
 };
+
+// Nested interactive elements need to swallow pointer-down so the row's
+// drag sensor doesn't start a drag while the user is just tapping a
+// button. Drag is intentionally activated by long-press on bare row area.
+const stopPointer = (e: React.PointerEvent) => e.stopPropagation();
 
 export function CityRow({
   city,
@@ -45,6 +51,7 @@ export function CityRow({
   selectedRange,
   activeIdx,
   onCellTap,
+  onRemove,
   onMakeHome,
 }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -72,20 +79,17 @@ export function CityRow({
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.7 : 1,
-        // Each row is at least the bar's full width so its child header can
-        // sit sticky-pinned to the scroll container's visible left edge.
         width: compact ? "100%" : hours * colWidth,
       }}
+      {...attributes}
+      {...listeners}
       className={cn(
         "group relative",
         isHome ? "bg-[var(--home-tint)]" : "bg-white",
-        compact && "border-b border-[var(--border)]"
+        compact && "border-b border-[var(--border)]",
+        isDragging && "z-20 shadow-lg"
       )}
     >
-      {/* The header is pinned to the visible left edge of the shared
-          horizontal scroll container, so as bars scroll the city name and
-          the time/range stay readable at all times. z-10 keeps the
-          opaque header above the selection overlay below it. */}
       <div
         className={cn(
           "sticky left-0 z-10 flex items-center gap-2 px-4 h-9",
@@ -96,6 +100,7 @@ export function CityRow({
         <button
           type="button"
           onClick={onMakeHome}
+          onPointerDown={stopPointer}
           aria-label={isHome ? "Home city" : "Make this home"}
           className="flex-none w-7 h-7 -ml-1 rounded-md flex items-center justify-center"
         >
@@ -148,12 +153,12 @@ export function CityRow({
 
         <button
           type="button"
-          aria-label="Drag to reorder"
-          className="flex-none w-7 h-7 -mr-1 rounded-md text-slate-300 hover:text-slate-500 flex items-center justify-center touch-none cursor-grab active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
+          onClick={onRemove}
+          onPointerDown={stopPointer}
+          aria-label="Remove city"
+          className="flex-none w-7 h-7 -mr-1 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"
         >
-          <GripVertical size={16} strokeWidth={1.8} />
+          <Trash2 size={14} strokeWidth={1.8} />
         </button>
       </div>
 
@@ -166,6 +171,7 @@ export function CityRow({
           colWidth={colWidth}
           activeIdx={activeIdx}
           onCellTap={onCellTap}
+          onCellPointerDown={stopPointer}
         />
       )}
     </div>

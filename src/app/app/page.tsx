@@ -57,8 +57,13 @@ export default function AppPage() {
     return () => window.clearTimeout(timeoutId);
   }, []);
 
+  // Long-press to drag — the whole row is a drag target, so quick taps
+  // (hour-cell select, home toggle, delete) must not accidentally start
+  // a drag. 250 ms delay + 5 px tolerance is iOS-reorder territory.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -220,6 +225,7 @@ export default function AppPage() {
                     selectedRange={null}
                     activeIdx={null}
                     onCellTap={() => {}}
+                    onRemove={() => removeCity(city.id)}
                     onMakeHome={() => makeHome(city.id)}
                   />
                 ))}
@@ -261,6 +267,7 @@ export default function AppPage() {
                       onCellTap={(i) =>
                         setActiveIdx((cur) => (cur === i ? null : i))
                       }
+                      onRemove={() => removeCity(city.id)}
                       onMakeHome={() => makeHome(city.id)}
                     />
                   ))}
