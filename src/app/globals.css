@@ -17,6 +17,18 @@
   --night-tint: #d8e2ee;
   --daychip: #6f8aa6;
   --home-tint: #fef3c7;
+  /* Row background vars so the city list can go slightly translucent
+     when an ambient wallpaper is on, without touching row internals. */
+  --row-bg: #ffffff;
+  --row-home-bg: var(--home-tint);
+}
+
+/* When a city wallpaper is active on the app, let the rows become
+   slightly translucent so the background reads through — Telegram-style
+   integration rather than a solid foreground sheet. */
+.app-shell[data-home-bg="true"] {
+  --row-bg: rgba(255, 255, 255, 0.9);
+  --row-home-bg: rgba(254, 243, 199, 0.9);
 }
 
 @theme inline {

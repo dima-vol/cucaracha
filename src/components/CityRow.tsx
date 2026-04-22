@@ -65,14 +65,14 @@ export function CityRow({
       style={{ width: compact ? "100%" : hours * colWidth }}
       className={cn(
         "group relative",
-        isHome ? "bg-[var(--home-tint)]" : "bg-white",
+        isHome ? "bg-[var(--row-home-bg)]" : "bg-[var(--row-bg)]",
         compact && "border-b border-[var(--border)]"
       )}
     >
       <div
         className={cn(
           "sticky left-0 z-10 flex items-center gap-2 px-4 h-9",
-          isHome ? "bg-[var(--home-tint)]" : "bg-white"
+          isHome ? "bg-[var(--row-home-bg)]" : "bg-[var(--row-bg)]"
         )}
         style={{ width: "100vw" }}
       >
