@@ -62,12 +62,15 @@ function SheetInner({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30"
+      className="fixed inset-0 z-50 flex flex-col sm:items-center sm:justify-center sm:bg-black/30"
       onClick={onClose}
     >
       <div
-        className="w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-xl flex flex-col max-h-[90vh] sm:max-h-[80vh]"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="flex-1 sm:flex-none w-full sm:max-w-lg bg-white sm:rounded-2xl sm:shadow-xl flex flex-col sm:max-h-[80vh]"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-[var(--border)]">
