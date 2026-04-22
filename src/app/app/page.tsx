@@ -202,11 +202,11 @@ export default function AppPage() {
           >
             <CalendarDays size={18} strokeWidth={1.8} />
           </button>
-          <div className="flex-1 flex items-baseline justify-center gap-1.5">
-            <span className="text-[16px] font-semibold tracking-tight text-slate-900 leading-none">
+          <div className="flex-1 flex flex-col items-center justify-center leading-none">
+            <span className="tz-title text-[16px] font-semibold tracking-tight text-slate-900 leading-none">
               Cucaracha
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
+            <span className="tz-title-sub mt-[2px] text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
               Time Zones
             </span>
           </div>
@@ -326,6 +326,16 @@ export default function AppPage() {
         onMakeHome={(id) => makeHome(id)}
         existingIds={existingIds}
       />
+
+      {cityTheme === "tarot" && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/ornaments/banner.png"
+          alt=""
+          aria-hidden
+          className="tz-banner pointer-events-none fixed inset-x-0 bottom-0 w-full"
+        />
+      )}
       </div>
     </>
   );

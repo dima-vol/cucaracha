@@ -15,3 +15,21 @@ export function cityThemeForTz(tz: string): "tarot" | null {
   if (TAROT_HOME_TZS.has(tz)) return "tarot";
   return null;
 }
+
+/** Map of curated city → landmark asset slug (file at
+ *  /public/landmarks/{slug}.png). Keyed by city name + iso2 to avoid the
+ *  false positives a pure-timezone key would produce (Asia/Dubai covers
+ *  many cities, not just Dubai). */
+const LANDMARK_SLUGS: Record<string, string> = {
+  "buenos aires|ar": "buenos-aires",
+  "dubai|ae": "dubai",
+  "moscow|ru": "moscow",
+};
+
+export function landmarkSlugFor(city: {
+  city: string;
+  iso2: string;
+}): string | null {
+  const key = `${city.city.toLowerCase()}|${city.iso2.toLowerCase()}`;
+  return LANDMARK_SLUGS[key] ?? null;
+}
