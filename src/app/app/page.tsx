@@ -14,7 +14,6 @@ import { AddCitySheet } from "@/components/AddCitySheet";
 import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
 import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
-import { CityBackground } from "@/components/CityBackground";
 import {
   cityDateNumber,
   dateNumberDiffDays,
@@ -60,14 +59,6 @@ export default function AppPage() {
     const home = cities.find((c) => c.id === homeId) ?? cities[0];
     return home?.timezone ?? "UTC";
   }, [cities, homeId]);
-
-  // Hand-curated ambient background per home city. For now only Buenos
-  // Aires has an asset (still-image with a slow Ken Burns pan). Other
-  // homes fall back to the plain white canvas.
-  const backgroundSrc =
-    homeTz === "America/Argentina/Buenos_Aires"
-      ? "/backgrounds/buenos-aires.jpg"
-      : null;
 
   const existingIds = useMemo(
     () => new Set(cities.map((c) => c.id)),
@@ -184,9 +175,7 @@ export default function AppPage() {
     setViewMode((v) => (v === "bars" ? "list" : "bars"));
 
   return (
-    <>
-      <CityBackground src={backgroundSrc} />
-      <div className="app-shell relative z-10 min-h-dvh text-[var(--foreground)] flex flex-col">
+    <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[var(--border)]">
         <div className="px-3 h-11 flex items-center">
           <button
@@ -321,8 +310,7 @@ export default function AppPage() {
         onMakeHome={(id) => makeHome(id)}
         existingIds={existingIds}
       />
-      </div>
-    </>
+    </div>
   );
 }
 
