@@ -189,7 +189,7 @@ export default function AppPage() {
         className="app-shell relative z-10 min-h-dvh text-[var(--foreground)] flex flex-col"
         data-home-bg={backgroundSrc ? "true" : undefined}
       >
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-[var(--border)]">
+      <header className="sticky top-0 z-30 bg-white border-b border-[var(--border)]">
         <div className="px-3 h-11 flex items-center">
           <button
             type="button"

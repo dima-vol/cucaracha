@@ -21,14 +21,17 @@
      when an ambient wallpaper is on, without touching row internals. */
   --row-bg: #ffffff;
   --row-home-bg: var(--home-tint);
+  --row-backdrop: none;
 }
 
 /* When a city wallpaper is active on the app, let the rows become
-   slightly translucent so the background reads through — Telegram-style
-   integration rather than a solid foreground sheet. */
+   translucent so the background reads through — Telegram-style
+   integration rather than a solid foreground sheet. Backdrop blur keeps
+   numbers and city names crisp over the image behind them. */
 .app-shell[data-home-bg="true"] {
-  --row-bg: rgba(255, 255, 255, 0.9);
-  --row-home-bg: rgba(254, 243, 199, 0.9);
+  --row-bg: rgba(255, 255, 255, 0.82);
+  --row-home-bg: rgba(254, 243, 199, 0.82);
+  --row-backdrop: blur(6px);
 }
 
 @theme inline {

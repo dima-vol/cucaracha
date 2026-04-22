@@ -50,12 +50,8 @@ export function CityBackground({ src }: Props) {
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(false)}
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: "blur(24px) saturate(0.95)" }}
         />
       )}
-      {/* Soft white wash — keeps the UI readable without washing out the
-          colour of the image. Tuned to let the wallpaper peek through. */}
-      <div className="absolute inset-0 bg-white/78" />
     </div>
   );
 }

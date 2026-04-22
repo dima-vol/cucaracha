@@ -62,7 +62,11 @@ export function CityRow({
 
   return (
     <div
-      style={{ width: compact ? "100%" : hours * colWidth }}
+      style={{
+        width: compact ? "100%" : hours * colWidth,
+        backdropFilter: "var(--row-backdrop)",
+        WebkitBackdropFilter: "var(--row-backdrop)",
+      }}
       className={cn(
         "group relative",
         isHome ? "bg-[var(--row-home-bg)]" : "bg-[var(--row-bg)]",
@@ -74,7 +78,11 @@ export function CityRow({
           "sticky left-0 z-10 flex items-center gap-2 px-4 h-9",
           isHome ? "bg-[var(--row-home-bg)]" : "bg-[var(--row-bg)]"
         )}
-        style={{ width: "100vw" }}
+        style={{
+          width: "100vw",
+          backdropFilter: "var(--row-backdrop)",
+          WebkitBackdropFilter: "var(--row-backdrop)",
+        }}
       >
         <button
           type="button"
