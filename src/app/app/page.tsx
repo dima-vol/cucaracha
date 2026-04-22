@@ -62,10 +62,11 @@ export default function AppPage() {
   }, [cities, homeId]);
 
   // Hand-curated ambient background per home city. For now only Buenos
-  // Aires has a video; other homes fall back to the plain white canvas.
+  // Aires has an asset (still-image with a slow Ken Burns pan). Other
+  // homes fall back to the plain white canvas.
   const backgroundSrc =
     homeTz === "America/Argentina/Buenos_Aires"
-      ? "/backgrounds/buenos-aires.mp4"
+      ? "/backgrounds/buenos-aires.jpg"
       : null;
 
   const existingIds = useMemo(

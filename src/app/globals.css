@@ -76,3 +76,18 @@ html, body {
 .tz-bar-selecting .tz-cell.tz-cell-active {
   opacity: 1;
 }
+
+/* --- Ambient city background ------------------------------------------- */
+/* Slow Ken-Burns pan on still-image backdrops so a flat JPEG still feels
+   alive behind the heavy blur. 40 s each direction, infinite alternate. */
+@keyframes kenburns {
+  0%   { transform: scale(1.15) translate3d(-2%, -2%, 0); }
+  100% { transform: scale(1.25) translate3d(2%, 2%, 0); }
+}
+.bg-kenburns {
+  transform-origin: center;
+  animation: kenburns 40s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-kenburns { animation: none; transform: scale(1.1); }
+}
