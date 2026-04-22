@@ -78,16 +78,20 @@ html, body {
 }
 
 /* --- Ambient city background ------------------------------------------- */
-/* Slow Ken-Burns pan on still-image backdrops so a flat JPEG still feels
-   alive behind the heavy blur. 40 s each direction, infinite alternate. */
+/* Slow continuous push-in on still-image backdrops. The source is a
+   first-person street shot, so we want the viewer to feel drawn forward
+   into the scene rather than panned laterally. 60 s each direction,
+   infinite alternate — the zoom-out half reads as "the camera easing
+   back" rather than a jarring loop cut. */
 @keyframes kenburns {
-  0%   { transform: scale(1.15) translate3d(-2%, -2%, 0); }
-  100% { transform: scale(1.25) translate3d(2%, 2%, 0); }
+  0%   { transform: scale(1.08) translate3d(0, -1%, 0); }
+  100% { transform: scale(1.32) translate3d(0, 1%, 0); }
 }
 .bg-kenburns {
-  transform-origin: center;
-  animation: kenburns 40s ease-in-out infinite alternate;
+  transform-origin: center 55%;
+  animation: kenburns 60s ease-in-out infinite alternate;
+  will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {
-  .bg-kenburns { animation: none; transform: scale(1.1); }
+  .bg-kenburns { animation: none; transform: scale(1.12); }
 }
