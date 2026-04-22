@@ -34,6 +34,35 @@
   --row-backdrop: blur(6px);
 }
 
+/* --- Tarot theme (Buenos Aires) --------------------------------------
+   Everything themed lives behind this single selector, so the revert is
+   a one-hunk delete: remove this block + the data-city-theme attribute
+   in app/page.tsx and the UI is byte-identical to the minimalist state.
+   Phase 1 intentionally only overrides design tokens — no layout shifts,
+   no new markup — so every surface that already reads these vars picks
+   up the sepia palette for free. Typography is wired here too (vars
+   below); components start using them in Phase 2. */
+.app-shell[data-city-theme="tarot"] {
+  --background: #f1e4c6;
+  --foreground: #2a1a0f;
+  --muted: #7a5a3c;
+  --border: #b7935c;
+  --accent: #a8322a;
+  --accent-soft: #e8c98a;
+  --selection: #2d4f6b;
+  --selection-soft: rgba(45, 79, 107, 0.14);
+  --night-tint: #d9c79a;
+  --daychip: #5a3a22;
+  --home-tint: #e7cf9b;
+  --row-bg: rgba(241, 228, 198, 0.86);
+  --row-home-bg: rgba(231, 207, 155, 0.90);
+  --row-backdrop: blur(4px);
+  --tarot-gilt: #b7935c;
+  --tarot-gilt-deep: #7a5a3c;
+  --font-display: var(--font-cinzel), "IM Fell English", Georgia, serif;
+  --font-body: var(--font-cormorant), "IM Fell English", Georgia, serif;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

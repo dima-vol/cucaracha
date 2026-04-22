@@ -15,6 +15,7 @@ import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
 import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
 import { CityBackground } from "@/components/CityBackground";
+import { cityThemeForTz } from "@/lib/theme";
 import {
   cityDateNumber,
   dateNumberDiffDays,
@@ -67,6 +68,7 @@ export default function AppPage() {
     homeTz === "America/Argentina/Buenos_Aires"
       ? "/backgrounds/buenos-aires.jpg"
       : null;
+  const cityTheme = cityThemeForTz(homeTz);
 
   const existingIds = useMemo(
     () => new Set(cities.map((c) => c.id)),
@@ -188,6 +190,7 @@ export default function AppPage() {
       <div
         className="app-shell relative z-10 min-h-dvh text-[var(--foreground)] flex flex-col"
         data-home-bg={backgroundSrc ? "true" : undefined}
+        data-city-theme={cityTheme ?? undefined}
       >
       <header className="sticky top-0 z-30 bg-white border-b border-[var(--border)]">
         <div className="px-3 h-11 flex items-center">
