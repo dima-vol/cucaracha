@@ -72,7 +72,7 @@ export function DateStrip({
               aria-pressed={isSelected}
               aria-label={`${MONTH_LABELS[month]} ${dom}`}
               className={cn(
-                "tz-date-chip flex-none w-[60px] h-11 flex flex-col items-center justify-center rounded-lg",
+                "flex-none w-[60px] h-11 flex flex-col items-center justify-center rounded-lg",
                 "active:bg-slate-100 active:scale-[0.97] transition-transform duration-75",
                 "[touch-action:manipulation] [-webkit-tap-highlight-color:transparent]",
                 isSelected

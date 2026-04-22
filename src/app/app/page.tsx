@@ -14,8 +14,6 @@ import { AddCitySheet } from "@/components/AddCitySheet";
 import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
 import { DateStrip } from "@/components/DateStrip";
 import { InstallHint } from "@/components/InstallHint";
-import { CityBackground } from "@/components/CityBackground";
-import { cityThemeForTz } from "@/lib/theme";
 import {
   cityDateNumber,
   dateNumberDiffDays,
@@ -61,14 +59,6 @@ export default function AppPage() {
     const home = cities.find((c) => c.id === homeId) ?? cities[0];
     return home?.timezone ?? "UTC";
   }, [cities, homeId]);
-
-  // Hand-curated ambient wallpaper per home city. Only shown when the
-  // user's main city has a curated asset (so far: just Buenos Aires).
-  const backgroundSrc =
-    homeTz === "America/Argentina/Buenos_Aires"
-      ? "/backgrounds/buenos-aires.jpg"
-      : null;
-  const cityTheme = cityThemeForTz(homeTz);
 
   const existingIds = useMemo(
     () => new Set(cities.map((c) => c.id)),
@@ -185,14 +175,8 @@ export default function AppPage() {
     setViewMode((v) => (v === "bars" ? "list" : "bars"));
 
   return (
-    <>
-      <CityBackground src={backgroundSrc} />
-      <div
-        className="app-shell relative z-10 min-h-dvh text-[var(--foreground)] flex flex-col"
-        data-home-bg={backgroundSrc ? "true" : undefined}
-        data-city-theme={cityTheme ?? undefined}
-      >
-      <header className="sticky top-0 z-30 bg-white border-b border-[var(--border)]">
+    <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[var(--border)]">
         <div className="px-3 h-11 flex items-center">
           <button
             type="button"
@@ -202,11 +186,11 @@ export default function AppPage() {
           >
             <CalendarDays size={18} strokeWidth={1.8} />
           </button>
-          <div className="flex-1 flex flex-col items-center justify-center leading-none">
-            <span className="tz-title text-[16px] font-semibold tracking-tight text-slate-900 leading-none">
+          <div className="flex-1 flex items-baseline justify-center gap-1.5">
+            <span className="text-[16px] font-semibold tracking-tight text-slate-900 leading-none">
               Cucaracha
             </span>
-            <span className="tz-title-sub mt-[2px] text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
+            <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
               Time Zones
             </span>
           </div>
@@ -326,18 +310,7 @@ export default function AppPage() {
         onMakeHome={(id) => makeHome(id)}
         existingIds={existingIds}
       />
-
-      {cityTheme === "tarot" && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src="/ornaments/banner.png"
-          alt=""
-          aria-hidden
-          className="tz-banner pointer-events-none fixed inset-x-0 bottom-0 w-full"
-        />
-      )}
-      </div>
-    </>
+    </div>
   );
 }
 
