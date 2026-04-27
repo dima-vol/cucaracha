@@ -1,29 +1,52 @@
-# Cucaracha — Time Zones
+# Cucaracha
 
-A beautifully simple time-zone companion for people scheduling across
-cities. Built as a progressive web app: open in a browser, then add to the
-home screen to get an app-like launcher icon — no App Store needed.
+**Time zones are broken for people who live across cities.**
 
-Live at **[cucaracha.ai](https://cucaracha.ai)**.
+The world moved to remote. Your team is in Buenos Aires, Berlin, and Bangkok. Every scheduling tool makes you do the math — it's either a spreadsheet or a prayer. This is the tool we wished existed.
+
+**[cucaracha.ai](https://cucaracha.ai)** — open in any browser, add to home screen, done.
+
+---
+
+## What it does
+
+A single scrollable timeline. All your cities, locked in step. You see everyone's day at once. Drag to pick a time that works. No accounts. No backend. No nonsense.
+
+- Tap a column, see that hour highlighted across every city simultaneously
+- Swipe left to look ahead, right to look back — haptic feedback on every column boundary
+- Add any of 7,300+ cities in seconds, including Cyrillic search
+- Works offline. Installs as a native-feeling app. No App Store needed.
+
+---
 
 ## Stack
 
-- Next.js 16 (App Router) + React 19 + TypeScript
+- Next.js 16 + React 19 + TypeScript
 - Tailwind v4
-- `city-timezones` bundled dataset (7,300+ cities with IANA zones)
-- `@dnd-kit` for drag-to-reorder
-- Native `Intl.DateTimeFormat` for all timezone math (no moment/luxon needed)
-- PWA: manifest + service worker, offline-first
-- localStorage for state (no backend — yet)
+- `city-timezones` — 7,300+ cities with IANA zones, fully bundled
+- Native `Intl.DateTimeFormat` — no moment, no luxon
+- PWA: service worker, offline-first, installable
+- localStorage — no backend, no database, no account
 
-## Scripts
+---
+
+## Get started
 
 ```bash
-npm run dev       # next dev
-npm run build     # regenerate icons + next build
-npm run start     # production server
+git clone https://github.com/dima-vol/cucaracha
+cd cucaracha
+npm install
+npm run dev
+```
+
+Open [localhost:3000](http://localhost:3000).
+
+```bash
+npm run build   # icons + version.json + next build
 npm run lint
 ```
+
+---
 
 ## Project layout
 
@@ -31,33 +54,41 @@ npm run lint
 src/
 ├── app/
 │   ├── layout.tsx            root layout, manifest/meta, SW registration
-│   ├── page.tsx              landing page at /
-│   ├── app/page.tsx          the time-zone app at /app
+│   ├── page.tsx              landing page
+│   ├── app/page.tsx          the time-zone app
 │   └── globals.css
 ├── components/
-│   ├── CityRow.tsx
-│   ├── TimeBar.tsx
-│   ├── AddCitySheet.tsx
-│   ├── InstallHint.tsx
-│   ├── ScrollSync.tsx
-│   └── ServiceWorkerRegister.tsx
+│   ├── AddCitySheet.tsx      city picker bottom sheet
+│   ├── CityRow.tsx           single city row with time bar
+│   ├── DateStrip.tsx         scrollable date header
+│   ├── InstallHint.tsx       "add to home screen" prompt
+│   ├── TimeBar.tsx           24h horizontal time bar
+│   └── TimeColumnOverlay.tsx hour-column tap targets
 ├── hooks/
-│   └── useCities.ts
+│   ├── useCities.ts          city list state + persistence
+│   └── useHaptic.ts          iOS/Android haptic engine
 └── lib/
-    ├── tz.ts                 Intl-based time helpers
-    ├── cities.ts             search over bundled dataset
+    ├── tz.ts                 Intl-based timezone helpers
+    ├── cities.ts             fuzzy city search
     ├── storage.ts            localStorage persistence
     └── cn.ts
 
 public/
-├── manifest.webmanifest
-├── sw.js
-├── icon.svg
+├── sw.js                     offline service worker
+├── version.json              build SHA + timestamp
 └── icon-*.png                generated from icon.svg
+
+scripts/
+├── gen-version.mjs           writes version.json at build time
+└── generate-icons.mjs        renders icon.svg → PNG variants
 ```
 
-## Archived
+---
 
-The previous marketing landing (Cucaracha AI demo + game) lives on the
-[`archive/marketing-demo`](https://github.com/satoshiarch/cucaracha/tree/archive/marketing-demo)
-branch.
+## Contributing
+
+Issues and PRs welcome. Keep it simple — this tool does one thing.
+
+---
+
+MIT © [Dima Vol](https://github.com/dima-vol)
