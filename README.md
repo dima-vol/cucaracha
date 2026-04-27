@@ -2,7 +2,9 @@
 
 > Faster than asking an AI. Faster than Googling. Five seconds to see every timezone you work with — or your money back (it's free).
 
-I'm a remote founder. At any given moment I'm coordinating with people in Buenos Aires, Berlin, Dubai, and Bangkok. Every existing timezone tool I tried was either paywalled after four cities, covered in ads, or slow enough that I'd already forgotten why I opened it.
+I'm a remote founder. The moment I use this most: I'm about to schedule a call with someone and I need to know if 3pm my time is reasonable for them — right now, without context-switching to a browser tab, without asking an AI and waiting for a response.
+
+Every existing tool I tried was either paywalled after four cities, covered in ads, or slow enough that I'd already forgotten why I opened it.
 
 So I built my own. And then open-sourced it, because a timezone lookup is a calculator. It should be free. Forever.
 
