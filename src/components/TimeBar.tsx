@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/cn";
 import { cityParts, hourTier } from "@/lib/tz";
+import { hapticPulse } from "@/hooks/useHaptic";
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -57,7 +58,7 @@ export function TimeBar({
           <button
             key={i}
             type="button"
-            onClick={() => onCellTap?.(i)}
+            onClick={() => { hapticPulse(8); onCellTap?.(i); }}
             className={cn(
               "tz-cell relative flex-none flex items-center justify-center",
               night && "bg-[var(--night-tint)]",

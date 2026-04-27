@@ -9,6 +9,7 @@ import {
 } from "react";
 import { CalendarDays, List, LayoutList, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
+import { useHaptic } from "@/hooks/useHaptic";
 import { CityRow } from "@/components/CityRow";
 import { AddCitySheet } from "@/components/AddCitySheet";
 import { TimeColumnOverlay } from "@/components/TimeColumnOverlay";
@@ -40,6 +41,9 @@ export default function AppPage() {
   const dateInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const initialScrolledRef = useRef(false);
+  const isProgrammaticScrollRef = useRef(false);
+  const lastHapticRef = useRef(0);
+  const haptic = useHaptic();
 
   // Refresh on every minute boundary so city clocks never lag the wall
   // clock by more than a few ms.
@@ -90,6 +94,10 @@ export default function AppPage() {
       // working day is visible without scrolling.
       const targetX =
         Math.max(0, (targetColIdx + 9) * COL_WIDTH - el.clientWidth / 2);
+      isProgrammaticScrollRef.current = true;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { isProgrammaticScrollRef.current = false; });
+      });
       el.scrollTo({
         left: Math.min(targetX, BAR_TOTAL_WIDTH - el.clientWidth),
         behavior: smooth ? "smooth" : "auto",
@@ -111,6 +119,10 @@ export default function AppPage() {
     const el = scrollRef.current;
     if (!el) return;
     initialScrolledRef.current = true;
+    isProgrammaticScrollRef.current = true;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { isProgrammaticScrollRef.current = false; });
+    });
     const nowColIdx = Math.floor((realNow.getTime() - baseMs) / HOUR_MS);
     const targetX = Math.max(
       0,
@@ -136,9 +148,19 @@ export default function AppPage() {
       const centerMs = baseMs + centerColIdx * HOUR_MS;
       const centerDate = cityDateNumber(homeTz, new Date(centerMs));
       const offset = dateNumberDiffDays(centerDate, todayDateNumber);
-      setDayOffset((cur) => (cur === offset ? cur : offset));
+      setDayOffset((cur) => {
+        if (cur === offset) return cur;
+        if (!isProgrammaticScrollRef.current) {
+          const now = Date.now();
+          if (now - lastHapticRef.current >= 150) {
+            haptic(12);
+            lastHapticRef.current = now;
+          }
+        }
+        return offset;
+      });
     },
-    [baseMs, homeTz, todayDateNumber]
+    [baseMs, homeTz, todayDateNumber, haptic]
   );
 
   const changeDay = useCallback(
