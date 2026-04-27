@@ -2,7 +2,7 @@
 // network, but treat Next.js build assets as immutable (cache-first, safe
 // across redeploys because their filenames are content-hashed).
 
-const VERSION = "cucaracha-v3";
+const VERSION = "cucaracha-v4";
 const SHELL = [
   "/",
   "/app",
