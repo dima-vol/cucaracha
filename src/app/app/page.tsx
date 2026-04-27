@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { CalendarDays, List, LayoutList, Plus } from "lucide-react";
+import { List, LayoutList, Plus } from "lucide-react";
 import { useCities } from "@/hooks/useCities";
 import { useHaptic } from "@/hooks/useHaptic";
 import { CityRow } from "@/components/CityRow";
@@ -39,7 +39,6 @@ export default function AppPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("bars");
-  const dateInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const initialScrolledRef = useRef(false);
   const isProgrammaticScrollRef = useRef(false);
@@ -231,32 +230,6 @@ export default function AppPage() {
     [scrollToDayOffset]
   );
 
-  const openDatePicker = () => {
-    const el = dateInputRef.current;
-    if (!el) return;
-    try {
-      if (typeof el.showPicker === "function") {
-        el.showPicker();
-        return;
-      }
-    } catch {
-      /* fall through to click */
-    }
-    el.click();
-    el.focus();
-  };
-
-  const onPickDate = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (!value) return;
-    // Parse date parts directly to avoid browser-TZ interpretation of the
-    // date string. Compute the offset relative to today in the home timezone.
-    const [py, pmo, pd] = value.split("-").map(Number);
-    const pickedDateNumber = py * 10000 + pmo * 100 + pd;
-    const offset = dateNumberDiffDays(pickedDateNumber, todayDateNumber);
-    changeDay(offset);
-  };
-
   const toggleViewMode = () =>
     setViewMode((v) => (v === "bars" ? "list" : "bars"));
 
@@ -264,14 +237,7 @@ export default function AppPage() {
     <div className="app-shell min-h-dvh bg-white text-[var(--foreground)] flex flex-col">
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[var(--border)]">
         <div className="px-3 h-11 flex items-center">
-          <button
-            type="button"
-            onClick={openDatePicker}
-            aria-label="Jump to date"
-            className="flex-none w-8 h-8 rounded-full text-slate-500 hover:bg-slate-100 flex items-center justify-center"
-          >
-            <CalendarDays size={18} strokeWidth={1.8} />
-          </button>
+          <div className="flex-none w-8" />
           <div className="flex-1 flex items-baseline justify-center gap-1.5">
             <span className="text-[16px] font-semibold tracking-tight text-slate-900 leading-none">
               Cucaracha
@@ -316,13 +282,6 @@ export default function AppPage() {
             onSelect={changeDay}
           />
         )}
-        <input
-          ref={dateInputRef}
-          type="date"
-          className="sr-only"
-          tabIndex={-1}
-          onChange={onPickDate}
-        />
       </header>
 
       <InstallHint />
