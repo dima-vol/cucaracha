@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cucaracha — Time Zones",
   description:
-    "A beautifully simple time-zone companion for distributed teams. Installs to your home screen.",
+    "See every timezone you work with in under 5 seconds. Free, offline-first, no ads. Built for remote founders who schedule calls across cities.",
   applicationName: "Cucaracha",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

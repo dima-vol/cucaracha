@@ -1,7 +1,7 @@
 {
   "name": "Cucaracha — Time Zones",
   "short_name": "Cucaracha",
-  "description": "A beautifully simple time-zone companion.",
+  "description": "See every timezone you work with in under 5 seconds. Free, offline-first, no ads.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",

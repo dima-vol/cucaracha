@@ -27,14 +27,14 @@ export default function LandingPage() {
             <Globe size={12} /> Works offline · Installs to home screen
           </div>
           <h1 className="text-[40px] sm:text-[56px] leading-[1.05] font-semibold tracking-tight">
-            Time zones,
+            Every timezone,
             <br />
-            <span className="text-slate-400">without the math.</span>
+            <span className="text-slate-400">in under 5 seconds.</span>
           </h1>
           <p className="mt-6 text-[17px] sm:text-[18px] text-slate-600 max-w-xl leading-relaxed">
-            A quiet little app for people who schedule across cities.
-            Pick your home, add the places you care about, scan the day at a
-            glance. No account needed.
+            Built for remote founders who schedule calls across cities.
+            Open the app, see everyone&apos;s time at once. No ads, no paywall, no account.
+            A timezone lookup is a calculator — it should always be free.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
