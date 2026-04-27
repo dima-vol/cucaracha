@@ -10,7 +10,7 @@ So I built my own. And then open-sourced it, because a timezone lookup is a calc
 
 **[cucaracha.ai](https://cucaracha.ai)** — open in any browser, add to home screen, done.
 
-![Cucaracha — Buenos Aires, Dubai, Milan, Istanbul, London — range selected at 8pm](docs/screenshot.jpg)
+<img src="docs/screenshot.jpg" alt="Cucaracha app — Buenos Aires, Dubai, Milan, Istanbul, London" width="320" />
 
 ---
 
