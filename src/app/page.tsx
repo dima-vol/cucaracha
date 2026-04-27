@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Globe, Plus, Share, Home } from "lucide-react";
+import { ArrowRight, Globe, Plus, Share, Home, Star } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -13,12 +13,23 @@ export default function LandingPage() {
             Time Zones
           </span>
         </div>
-        <Link
-          href="/app"
-          className="text-[14px] font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1"
-        >
-          Open app <ArrowRight size={14} />
-        </Link>
+        <div className="flex items-center gap-4">
+          <a
+            href="https://github.com/dima-vol/cucaracha"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-1.5 text-[13px] text-slate-500 hover:text-slate-900"
+          >
+            <Star size={13} />
+            Star on GitHub
+          </a>
+          <Link
+            href="/app"
+            className="text-[14px] font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1"
+          >
+            Open app <ArrowRight size={14} />
+          </Link>
+        </div>
       </header>
 
       <main className="flex-1">
