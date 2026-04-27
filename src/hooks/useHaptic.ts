@@ -6,45 +6,43 @@ const _isIOS =
 const _hasVibrate =
   typeof navigator !== "undefined" && "vibrate" in navigator;
 
-// iOS haptic via hidden range input trick.
-// When a range input steps, iOS Safari fires its native selection haptic
-// (Taptic Engine) — silent, no AudioContext required.
-let _rangeEl: HTMLInputElement | null = null;
-let _rangeStep = 0;
+// iOS haptic via checkbox switch + label.click() (Safari 17.4+).
+// <input type="checkbox" switch> triggers native Taptic Engine selection
+// feedback when its associated <label> is clicked — silent, no AudioContext.
+// Must be called from within a user-gesture handler (e.g. touchmove, touchstart).
+const _CB_ID = "__cucaracha_haptic_cb__";
+let _labelEl: HTMLLabelElement | null = null;
 
-function _getRange(): HTMLInputElement | null {
+function _getLabel(): HTMLLabelElement | null {
   if (typeof document === "undefined") return null;
-  if (_rangeEl) return _rangeEl;
+  if (_labelEl) return _labelEl;
   try {
-    const el = document.createElement("input");
-    el.type = "range";
-    el.min = "0";
-    el.max = "100";
-    el.step = "1";
-    el.value = "50";
-    el.style.cssText =
-      "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;";
-    document.body.appendChild(el);
-    _rangeEl = el;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = _CB_ID;
+    cb.setAttribute("switch", "");
+    cb.style.cssText =
+      "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;clip:rect(0,0,0,0);";
+
+    const label = document.createElement("label");
+    label.htmlFor = _CB_ID;
+    label.style.cssText =
+      "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;clip:rect(0,0,0,0);";
+
+    document.body.appendChild(cb);
+    document.body.appendChild(label);
+    _labelEl = label;
   } catch {
-    _rangeEl = null;
+    _labelEl = null;
   }
-  return _rangeEl;
+  return _labelEl;
 }
 
 function _iosHaptic(): void {
-  const el = _getRange();
-  if (!el) return;
+  const label = _getLabel();
+  if (!label) return;
   try {
-    // Alternate step direction to stay within bounds and keep triggering.
-    _rangeStep = (_rangeStep + 1) % 2;
-    if (_rangeStep === 0) {
-      el.stepUp();
-    } else {
-      el.stepDown();
-    }
-    // Dispatch input event so iOS registers the change.
-    el.dispatchEvent(new Event("input", { bubbles: true }));
+    label.click();
   } catch {
     // Silently ignore if the trick isn't supported.
   }
@@ -52,8 +50,9 @@ function _iosHaptic(): void {
 
 /** Fire a haptic pulse.
  *  - Android / Chrome: Web Vibration API — true vibe motor.
- *  - iOS Safari / PWA: hidden range input stepUp/stepDown — fires native
- *    Taptic Engine selection feedback, silent, no AudioContext needed.
+ *  - iOS Safari / PWA (17.4+): hidden checkbox switch + label.click() — fires
+ *    native Taptic Engine selection feedback, silent, no AudioContext needed.
+ *    Must be called from a user-gesture handler (touchmove/touchstart).
  *  - Other: silent no-op. */
 export function hapticPulse(_ms?: number): void {
   if (_isIOS) {

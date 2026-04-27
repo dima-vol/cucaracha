@@ -147,6 +147,8 @@ export default function AppPage() {
       );
 
       // Tick haptic on every column crossing — roulette / dial feel.
+      // Android: navigator.vibrate() works from scroll events.
+      // iOS: touchmove handler below fires haptic instead (user-gesture context).
       if (!isProgrammaticScrollRef.current && centerColIdx !== lastHapticColRef.current) {
         haptic(8);
         lastHapticColRef.current = centerColIdx;
@@ -158,6 +160,27 @@ export default function AppPage() {
       setDayOffset((cur) => (cur === offset ? cur : offset));
     },
     [baseMs, homeTz, todayDateNumber, haptic]
+  );
+
+  // iOS requires haptic to be called from within a user-gesture handler.
+  // touchmove fires during the actual touch — scroll may lack that context.
+  // lastHapticColRef is shared with handleScroll so whichever fires first wins;
+  // the other will see the same ref and skip — no double-firing.
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (isProgrammaticScrollRef.current) return;
+      const el = e.currentTarget;
+      const centerX = el.scrollLeft + el.clientWidth / 2;
+      const centerColIdx = Math.max(
+        0,
+        Math.min(HOURS_WINDOW - 1, Math.round(centerX / COL_WIDTH))
+      );
+      if (centerColIdx !== lastHapticColRef.current) {
+        haptic(8);
+        lastHapticColRef.current = centerColIdx;
+      }
+    },
+    [haptic]
   );
 
   const changeDay = useCallback(
@@ -292,6 +315,7 @@ export default function AppPage() {
           <div
             ref={scrollRef}
             onScroll={handleScroll}
+            onTouchMove={handleTouchMove}
             className="overflow-x-auto overflow-y-hidden no-scrollbar snap-hours"
           >
             <div className="relative" style={{ width: BAR_TOTAL_WIDTH }}>
