@@ -188,12 +188,16 @@ export function homeTzMidnightMs(homeTz: string, dayRef: Date): number {
     day: "2-digit",
   });
   const parts = fmt.formatToParts(dayRef);
-  const y = parseInt(parts.find((p) => p.type === "year")!.value, 10);
-  const m = parseInt(parts.find((p) => p.type === "month")!.value, 10);
-  const d = parseInt(parts.find((p) => p.type === "day")!.value, 10);
-  const utcMidnight = Date.UTC(y, m - 1, d);
-  const offsetMin = zoneOffsetMinutes(homeTz, new Date(utcMidnight));
-  return utcMidnight - offsetMin * 60_000;
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "0";
+  const y = parseInt(get("year"), 10);
+  const m = parseInt(get("month"), 10);
+  const d = parseInt(get("day"), 10);
+  // Query the offset at dayRef itself — it's guaranteed to be within the
+  // correct local day. Querying at Date.UTC(y,m-1,d) (UTC midnight) can
+  // yield the wrong DST offset when UTC midnight falls before the DST
+  // transition but local midnight falls after it (or vice versa).
+  const offsetMin = zoneOffsetMinutes(homeTz, dayRef);
+  return Date.UTC(y, m - 1, d) - offsetMin * 60_000;
 }
 
 /** Integer day distance between two YYYYMMDD-style dates. */

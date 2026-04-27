@@ -7,6 +7,19 @@ export type PersistedState = {
   homeId: string | null;
 };
 
+function isValidCity(c: unknown): c is CityEntry {
+  if (!c || typeof c !== "object") return false;
+  const obj = c as Record<string, unknown>;
+  return (
+    typeof obj.id === "string" &&
+    typeof obj.city === "string" &&
+    typeof obj.country === "string" &&
+    typeof obj.iso2 === "string" &&
+    typeof obj.timezone === "string" &&
+    obj.timezone.length > 0
+  );
+}
+
 export function loadState(): PersistedState | null {
   if (typeof window === "undefined") return null;
   try {
@@ -14,7 +27,10 @@ export function loadState(): PersistedState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PersistedState;
     if (!Array.isArray(parsed.cities)) return null;
-    return parsed;
+    // Filter out any malformed entries to prevent downstream Intl crashes.
+    const cities = parsed.cities.filter(isValidCity);
+    const homeId = typeof parsed.homeId === "string" ? parsed.homeId : null;
+    return { cities, homeId };
   } catch {
     return null;
   }

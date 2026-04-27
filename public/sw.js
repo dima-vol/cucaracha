@@ -2,7 +2,7 @@
 // network, but treat Next.js build assets as immutable (cache-first, safe
 // across redeploys because their filenames are content-hashed).
 
-const VERSION = "cucaracha-v2";
+const VERSION = "cucaracha-v3";
 const SHELL = [
   "/",
   "/app",
@@ -83,8 +83,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const clone = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, clone)).catch(() => {});
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, clone)).catch(() => {});
+          }
           return res;
         })
         .catch(async () => {
