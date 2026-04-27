@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/cn";
+import { cityDateNumber } from "@/lib/tz";
 
 const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const MONTH_LABELS = [
@@ -11,6 +12,7 @@ const MONTH_LABELS = [
 
 type Props = {
   realNow: Date;
+  homeTz: string;
   dayOffset: number;
   onSelect: (offset: number) => void;
   back?: number;
@@ -19,27 +21,29 @@ type Props = {
 
 export function DateStrip({
   realNow,
+  homeTz,
   dayOffset,
   onSelect,
   back = 1,
   forward = 13,
 }: Props) {
-  // Rebuild only when the calendar date rolls over, not on every minute tick.
-  const todayKey =
-    realNow.getFullYear() * 10000 +
-    (realNow.getMonth() + 1) * 100 +
-    realNow.getDate();
-  const days = useMemo(
-    () =>
-      Array.from({ length: back + forward + 1 }, (_, i) => {
-        const offset = i - back;
-        const d = new Date(realNow);
-        d.setDate(d.getDate() + offset);
-        return { offset, date: d };
-      }),
+  // Rebuild only when the home-tz calendar date rolls over, not on every minute tick.
+  // cityDateNumber returns a YYYYMMDD integer in the home timezone.
+  const todayKey = cityDateNumber(homeTz, realNow);
+  const days = useMemo(() => {
+    // Extract y/m/d from the home-tz today key (YYYYMMDD integer).
+    const ty = Math.floor(todayKey / 10000);
+    const tm = Math.floor((todayKey % 10000) / 100);
+    const td = todayKey % 100;
+    return Array.from({ length: back + forward + 1 }, (_, i) => {
+      const offset = i - back;
+      // Represent each home-tz date as a UTC Date so getUTC* methods give
+      // the correct home-tz year/month/day regardless of browser timezone.
+      const date = new Date(Date.UTC(ty, tm - 1, td + offset));
+      return { offset, date };
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- recomputed per day
-    [todayKey, back, forward]
-  );
+  }, [todayKey, back, forward]);
 
   const selectedRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -56,9 +60,9 @@ export function DateStrip({
         {days.map((d) => {
           const isToday = d.offset === 0;
           const isSelected = d.offset === dayOffset;
-          const day = d.date.getDay();
-          const dom = d.date.getDate();
-          const month = d.date.getMonth();
+          const day = d.date.getUTCDay();
+          const dom = d.date.getUTCDate();
+          const month = d.date.getUTCMonth();
           // Show the month next to the number only on today, the currently
           // selected day, or when the month rolls over — keeps the strip
           // readable during month boundaries.

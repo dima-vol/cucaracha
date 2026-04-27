@@ -99,9 +99,14 @@ export default function AppPage() {
   );
 
   // Place the scroll near "now" when bars first mount so the user doesn't
-  // land on yesterday's column 0.
+  // land on yesterday's column 0. Reset the flag when leaving bars mode so
+  // re-entering bars always scrolls to now.
   useEffect(() => {
-    if (viewMode !== "bars" || initialScrolledRef.current) return;
+    if (viewMode !== "bars") {
+      initialScrolledRef.current = false;
+      return;
+    }
+    if (initialScrolledRef.current) return;
     if (!hydrated || cities.length === 0) return;
     const el = scrollRef.current;
     if (!el) return;
@@ -162,12 +167,11 @@ export default function AppPage() {
   const onPickDate = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (!value) return;
-    const picked = new Date(value + "T00:00:00");
-    const today = new Date(realNow);
-    today.setHours(0, 0, 0, 0);
-    const offset = Math.round(
-      (picked.getTime() - today.getTime()) / (24 * HOUR_MS)
-    );
+    // Parse date parts directly to avoid browser-TZ interpretation of the
+    // date string. Compute the offset relative to today in the home timezone.
+    const [py, pmo, pd] = value.split("-").map(Number);
+    const pickedDateNumber = py * 10000 + pmo * 100 + pd;
+    const offset = dateNumberDiffDays(pickedDateNumber, todayDateNumber);
     changeDay(offset);
   };
 
@@ -225,6 +229,7 @@ export default function AppPage() {
         {viewMode === "bars" && (
           <DateStrip
             realNow={realNow}
+            homeTz={homeTz}
             dayOffset={dayOffset}
             onSelect={changeDay}
           />

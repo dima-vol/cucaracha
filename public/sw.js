@@ -83,8 +83,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const clone = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, clone)).catch(() => {});
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, clone)).catch(() => {});
+          }
           return res;
         })
         .catch(async () => {
