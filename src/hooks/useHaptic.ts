@@ -6,63 +6,68 @@ const _isIOS =
 const _hasVibrate =
   typeof navigator !== "undefined" && "vibrate" in navigator;
 
-// Shared AudioContext for iOS haptic — created lazily on first user gesture.
-let _audioCtx: AudioContext | null = null;
+// iOS haptic via hidden range input trick.
+// When a range input steps, iOS Safari fires its native selection haptic
+// (Taptic Engine) — silent, no AudioContext required.
+let _rangeEl: HTMLInputElement | null = null;
+let _rangeStep = 0;
 
-function _getAudioCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
+function _getRange(): HTMLInputElement | null {
+  if (typeof document === "undefined") return null;
+  if (_rangeEl) return _rangeEl;
   try {
-    if (!_audioCtx) {
-      const AC =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext })
-          .webkitAudioContext;
-      if (AC) _audioCtx = new AC();
+    const el = document.createElement("input");
+    el.type = "range";
+    el.min = "0";
+    el.max = "100";
+    el.step = "1";
+    el.value = "50";
+    el.style.cssText =
+      "position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;";
+    document.body.appendChild(el);
+    _rangeEl = el;
+  } catch {
+    _rangeEl = null;
+  }
+  return _rangeEl;
+}
+
+function _iosHaptic(): void {
+  const el = _getRange();
+  if (!el) return;
+  try {
+    // Alternate step direction to stay within bounds and keep triggering.
+    _rangeStep = (_rangeStep + 1) % 2;
+    if (_rangeStep === 0) {
+      el.stepUp();
+    } else {
+      el.stepDown();
     }
-    if (_audioCtx?.state === "suspended") void _audioCtx.resume();
-    return _audioCtx ?? null;
+    // Dispatch input event so iOS registers the change.
+    el.dispatchEvent(new Event("input", { bubbles: true }));
   } catch {
-    return null;
+    // Silently ignore if the trick isn't supported.
   }
 }
 
-function _iosHaptic(ms: number): void {
-  const ctx = _getAudioCtx();
-  if (!ctx) return;
-  try {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "sine";
-    osc.frequency.value = 200;
-    const dur = Math.max(ms, 10) / 1000;
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + dur);
-  } catch {
-    // AudioContext may be in a bad state; ignore.
-  }
-}
-
-/** Fire a haptic pulse of `ms` milliseconds.
- *  - Android / Chrome: Web Vibration API (true haptic).
- *  - iOS PWA: AudioContext 200 Hz sine pulse through speaker.
- *    Requires phone NOT to be on silent mode. */
-export function hapticPulse(ms: number): void {
+/** Fire a haptic pulse.
+ *  - Android / Chrome: Web Vibration API — true vibe motor.
+ *  - iOS Safari / PWA: hidden range input stepUp/stepDown — fires native
+ *    Taptic Engine selection feedback, silent, no AudioContext needed.
+ *  - Other: silent no-op. */
+export function hapticPulse(_ms?: number): void {
   if (_isIOS) {
-    _iosHaptic(ms);
+    _iosHaptic();
   } else if (_hasVibrate) {
     try {
-      navigator.vibrate(ms);
+      navigator.vibrate(_ms ?? 8);
     } catch {
       // Some Android WebViews throw instead of silently returning false.
     }
   }
 }
 
-/** React hook that returns a stable `hapticPulse` callback. */
-export function useHaptic(): (ms: number) => void {
+/** React hook returning a stable hapticPulse callback. */
+export function useHaptic(): (ms?: number) => void {
   return useCallback(hapticPulse, []);
 }

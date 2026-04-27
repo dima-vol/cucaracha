@@ -42,7 +42,7 @@ export default function AppPage() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const initialScrolledRef = useRef(false);
   const isProgrammaticScrollRef = useRef(false);
-  const lastHapticRef = useRef(0);
+  const lastHapticColRef = useRef(-999);
   const haptic = useHaptic();
 
   // Refresh on every minute boundary so city clocks never lag the wall
@@ -145,20 +145,17 @@ export default function AppPage() {
         0,
         Math.min(HOURS_WINDOW - 1, Math.round(centerX / COL_WIDTH))
       );
+
+      // Tick haptic on every column crossing — roulette / dial feel.
+      if (!isProgrammaticScrollRef.current && centerColIdx !== lastHapticColRef.current) {
+        haptic(8);
+        lastHapticColRef.current = centerColIdx;
+      }
+
       const centerMs = baseMs + centerColIdx * HOUR_MS;
       const centerDate = cityDateNumber(homeTz, new Date(centerMs));
       const offset = dateNumberDiffDays(centerDate, todayDateNumber);
-      setDayOffset((cur) => {
-        if (cur === offset) return cur;
-        if (!isProgrammaticScrollRef.current) {
-          const now = Date.now();
-          if (now - lastHapticRef.current >= 150) {
-            haptic(12);
-            lastHapticRef.current = now;
-          }
-        }
-        return offset;
-      });
+      setDayOffset((cur) => (cur === offset ? cur : offset));
     },
     [baseMs, homeTz, todayDateNumber, haptic]
   );
