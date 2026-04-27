@@ -27,6 +27,7 @@ const COL_WIDTH = 52;
 const HOUR_MS = 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 const BAR_TOTAL_WIDTH = HOURS_WINDOW * COL_WIDTH;
+const HAPTIC_MIN_INTERVAL_MS = 150;
 
 type ViewMode = "bars" | "list";
 
@@ -43,6 +44,9 @@ export default function AppPage() {
   const initialScrolledRef = useRef(false);
   const isProgrammaticScrollRef = useRef(false);
   const lastHapticColRef = useRef(-999);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartScrollLeftRef = useRef<number>(0);
+  const lastHapticTimeRef = useRef<number>(0);
   const haptic = useHaptic();
 
   // Refresh on every minute boundary so city clocks never lag the wall
@@ -162,21 +166,57 @@ export default function AppPage() {
     [baseMs, homeTz, todayDateNumber, haptic]
   );
 
+  // Capture touch start position so touchmove can compute a reliable estimated
+  // scroll position. iOS does NOT update el.scrollLeft synchronously during
+  // touchmove — the browser defers it until after the gesture ends — so reading
+  // scrollLeft in touchmove always returns the pre-gesture value.
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (e.touches.length !== 1) {
+        // Multi-touch (pinch/zoom) — invalidate snapshot so touchmove bails.
+        touchStartXRef.current = null;
+        return;
+      }
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartScrollLeftRef.current = e.currentTarget.scrollLeft;
+    },
+    []
+  );
+
+  // System cancelled gesture (incoming call, Control Center, etc.) — reset.
+  const handleTouchCancel = useCallback(() => {
+    touchStartXRef.current = null;
+    touchStartScrollLeftRef.current = 0;
+  }, []);
+
   // iOS requires haptic to be called from within a user-gesture handler.
-  // touchmove fires during the actual touch — scroll may lack that context.
-  // lastHapticColRef is shared with handleScroll so whichever fires first wins;
-  // the other will see the same ref and skip — no double-firing.
+  // Estimate scroll position via clientX delta — works synchronously on iOS
+  // unlike el.scrollLeft which is deferred. lastHapticColRef is shared with
+  // handleScroll so whichever fires first wins; the other skips — no double-fire.
   const handleTouchMove = useCallback(
     (e: React.TouchEvent<HTMLDivElement>) => {
       if (isProgrammaticScrollRef.current) return;
+      if (e.touches.length !== 1) return;
+      if (touchStartXRef.current === null) return;
+
       const el = e.currentTarget;
-      const centerX = el.scrollLeft + el.clientWidth / 2;
+      const touchDelta = touchStartXRef.current - e.touches[0].clientX;
+      const maxScrollLeft = HOURS_WINDOW * COL_WIDTH - el.clientWidth;
+      const estimatedScrollLeft = Math.max(
+        0,
+        Math.min(maxScrollLeft, touchStartScrollLeftRef.current + touchDelta)
+      );
+      const centerX = estimatedScrollLeft + el.clientWidth / 2;
       const centerColIdx = Math.max(
         0,
         Math.min(HOURS_WINDOW - 1, Math.round(centerX / COL_WIDTH))
       );
       if (centerColIdx !== lastHapticColRef.current) {
-        haptic(8);
+        const now = Date.now();
+        if (now - lastHapticTimeRef.current >= HAPTIC_MIN_INTERVAL_MS) {
+          haptic(8);
+          lastHapticTimeRef.current = now;
+        }
         lastHapticColRef.current = centerColIdx;
       }
     },
@@ -315,7 +355,9 @@ export default function AppPage() {
           <div
             ref={scrollRef}
             onScroll={handleScroll}
+            onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
+            onTouchCancel={handleTouchCancel}
             className="overflow-x-auto overflow-y-hidden no-scrollbar snap-hours"
           >
             <div className="relative" style={{ width: BAR_TOTAL_WIDTH }}>
