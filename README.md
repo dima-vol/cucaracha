@@ -1,21 +1,41 @@
 # Cucaracha
 
-**Time zones are broken for people who live across cities.**
+> Faster than asking an AI. Faster than Googling. Five seconds to see every timezone you work with — or your money back (it's free).
 
-The world moved to remote. Your team is in Buenos Aires, Berlin, and Bangkok. Every scheduling tool makes you do the math — it's either a spreadsheet or a prayer. This is the tool we wished existed.
+I'm a remote founder. At any given moment I'm coordinating with people in Buenos Aires, Berlin, Dubai, and Bangkok. Every existing timezone tool I tried was either paywalled after four cities, covered in ads, or slow enough that I'd already forgotten why I opened it.
+
+So I built my own. And then open-sourced it, because a timezone lookup is a calculator. It should be free. Forever.
 
 **[cucaracha.ai](https://cucaracha.ai)** — open in any browser, add to home screen, done.
 
 ---
 
-## What it does
+## How it works
 
-A single scrollable timeline. All your cities, locked in step. You see everyone's day at once. Drag to pick a time that works. No accounts. No backend. No nonsense.
+Open the app. Tap your city. See every timezone you work with, side by side on a single scrollable timeline. The dates at the top aren't just functional — they're a visual anchor that lets your brain parse "tomorrow afternoon in Tokyo" in one glance instead of doing the math.
 
-- Tap a column, see that hour highlighted across every city simultaneously
-- Swipe left to look ahead, right to look back — haptic feedback on every column boundary
-- Add any of 7,300+ cities in seconds, including Cyrillic search
-- Works offline. Installs as a native-feeling app. No App Store needed.
+Under 5 seconds from unlock to answer. No account. No ads. No limit on cities.
+
+---
+
+## Why a PWA
+
+This started as an experiment: can you build an app that installs on every device — iPhone, Android, desktop — without touching the App Store or Google Play?
+
+Yes. You can. Open in Safari, add to home screen, get an icon, offline support, and a native feel. This is how I think all MVPs should be built. Separate iOS and Android apps are a complexity tax you shouldn't pay until you've proven the idea.
+
+---
+
+## Features
+
+- **Lockstep horizontal scroll** — all city bars move together, one finger
+- **Range selection** — tap or drag to highlight a time window across all zones simultaneously
+- **Haptic feedback** — tactile ratchet on every column boundary while swiping (iOS Safari 17.4+ / Android Chrome)
+- **Date strip** — scrollable header that anchors your sense of "which day"
+- **Now indicator** — live hairline on the current hour
+- **City search** — 7,300+ cities, Cyrillic supported
+- **Drag-to-reorder** — long-press to rearrange your list
+- **Offline-first** — service worker caches everything, works without network
 
 ---
 
@@ -24,8 +44,8 @@ A single scrollable timeline. All your cities, locked in step. You see everyone'
 - Next.js 16 + React 19 + TypeScript
 - Tailwind v4
 - `city-timezones` — 7,300+ cities with IANA zones, fully bundled
-- Native `Intl.DateTimeFormat` — no moment, no luxon
-- PWA: service worker, offline-first, installable
+- Native `Intl.DateTimeFormat` — no moment, no luxon, no BS
+- PWA: service worker, offline-first, installable on any device
 - localStorage — no backend, no database, no account
 
 ---
@@ -87,7 +107,7 @@ scripts/
 
 ## Contributing
 
-Issues and PRs welcome. Keep it simple — this tool does one thing.
+Issues and PRs welcome. If you think timezone lookup should cost money — we disagree, but you're welcome to fork it.
 
 ---
 
