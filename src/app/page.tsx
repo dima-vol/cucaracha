@@ -13,23 +13,12 @@ export default function LandingPage() {
             Time Zones
           </span>
         </div>
-        <div className="flex items-center gap-4">
-          <a
-            href="https://github.com/dima-vol/cucaracha"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-1.5 text-[13px] text-slate-500 hover:text-slate-900"
-          >
-            <Star size={13} />
-            Star on GitHub
-          </a>
-          <Link
-            href="/app"
-            className="text-[14px] font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1"
-          >
-            Open app <ArrowRight size={14} />
-          </Link>
-        </div>
+        <Link
+          href="/app"
+          className="text-[14px] font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1"
+        >
+          Open app <ArrowRight size={14} />
+        </Link>
       </header>
 
       <main className="flex-1">
@@ -59,6 +48,17 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-[var(--border)] text-[15px] font-medium text-slate-700 hover:bg-slate-50"
             >
               How to install
+            </a>
+          </div>
+          <div className="mt-5">
+            <a
+              href="https://github.com/dima-vol/cucaracha"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 h-8 px-3 rounded-md border border-[#d0d7de] bg-[#f6f8fa] hover:bg-[#edf0f3] text-[13px] font-medium text-slate-800 shadow-sm transition-colors"
+            >
+              <Star size={14} className="text-slate-500" />
+              Star on GitHub
             </a>
           </div>
         </section>
