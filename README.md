@@ -1,5 +1,10 @@
 # Cucaracha
 
+[![Live demo](https://img.shields.io/badge/demo-cucaracha.ai-black?style=flat-square)](https://cucaracha.ai)
+[![Stars](https://img.shields.io/github/stars/dima-vol/cucaracha?style=flat-square&logo=github&color=fbbf24&labelColor=1a1a1a)](https://github.com/dima-vol/cucaracha/stargazers)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![PWA](https://img.shields.io/badge/PWA-offline--first-5c6bc0?style=flat-square)](https://cucaracha.ai)
+
 > Faster than asking an AI. Faster than Googling. Five seconds to see every timezone you work with — or your money back (it's free).
 
 I'm a remote founder. The moment I use this most: I'm about to schedule a call with someone and I need to know if 3pm my time is reasonable for them — right now, without context-switching to a browser tab, without asking an AI and waiting for a response.
@@ -9,6 +14,8 @@ Every existing tool I tried was either paywalled after four cities, covered in a
 So I built my own. And then open-sourced it, because a timezone lookup is a calculator. It should be free. Forever.
 
 **[cucaracha.ai](https://cucaracha.ai)** — open in any browser, add to home screen, done.
+
+[![Follow @dimavol on X](https://img.shields.io/badge/follow-%40dimavol-black?style=for-the-badge&logo=x&logoColor=white)](https://x.com/dimavol)
 
 <img src="docs/screenshot.jpg" alt="Cucaracha app — Buenos Aires, Dubai, Milan, Istanbul, London" width="240" />
 
