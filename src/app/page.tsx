@@ -55,9 +55,9 @@ export default function LandingPage() {
               href="https://github.com/dima-vol/cucaracha"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 h-8 px-3 rounded-md border border-[#d0d7de] bg-[#f6f8fa] hover:bg-[#edf0f3] text-[13px] font-medium text-slate-800 shadow-sm transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full border border-[var(--border)] text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
             >
-              <Star size={14} className="text-slate-500" />
+              <Star size={13} className="text-[var(--accent)]" fill="currentColor" />
               Star on GitHub
             </a>
           </div>
